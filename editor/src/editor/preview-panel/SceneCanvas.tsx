@@ -7,6 +7,7 @@ import type {
   VideoSettings,
 } from "@video/schema/scene-schema";
 import { COMPOSITION_HEIGHT, COMPOSITION_WIDTH, FPS } from "@video/video-config";
+import { settledFrame } from "@/lib/scene-meta";
 import { CanvasLayerOverlay } from "./CanvasLayerOverlay";
 import { LogoOverlay } from "./LogoOverlay";
 
@@ -19,15 +20,6 @@ type Props = {
   onDeleteLayer: (id: string) => void;
   onReorderLayer: (id: string, toIndex: number) => void;
   onChangeLogo: (logo: LogoSettings) => void;
-};
-
-// Layers fade in staggered by index, so the editing surface is shown at a
-// frame where every animation has already settled.
-const settledFrame = (scene: Scene) => {
-  const layerCount = scene.type === "canvas" ? scene.layers.length : 1;
-  const lastStart = (layerCount - 1) * 4;
-  const maxFrame = Math.round(scene.durationInSeconds * FPS) - 1;
-  return Math.min(lastStart + 20, maxFrame);
 };
 
 /**

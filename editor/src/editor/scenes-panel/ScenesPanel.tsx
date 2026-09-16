@@ -34,7 +34,7 @@ export const ScenesPanel: React.FC<Props> = ({
   onDuplicateScene,
   onDeleteScene,
 }) => (
-  <Card className="flex w-72 flex-col gap-0 py-0 shadow-sm">
+  <Card className="flex w-80 flex-col gap-0 py-0 shadow-sm">
     <div className="flex items-baseline gap-2 border-b px-4 py-3">
       <h2 className="text-sm font-semibold">Escenas ({scenes.length})</h2>
       <span className="text-xs text-muted-foreground">
