@@ -1,5 +1,10 @@
 import type { CSSProperties } from "react";
-import type { CanvasBackground, ShapeLayer, TextLayer } from "./scene-schema";
+import type {
+  CanvasBackground,
+  ShapeLayer,
+  SubtitleStyle,
+  TextLayer,
+} from "./scene-schema";
 import { interFont, openSansFont } from "./fonts";
 
 export const backgroundStyle = (
@@ -107,3 +112,54 @@ export const shapeFillColor = (
       return "#ffffff";
   }
 };
+
+// Subtitle size in composition pixels (1920x1080).
+export const subtitleFontSize = 34;
+
+// Shared by the burned-in subtitle and the settings dialog's preview of it, so
+// what the editor shows is what the video renders.
+export const subtitleTextStyle = (
+  style: SubtitleStyle,
+  fontSize = subtitleFontSize,
+): CSSProperties => {
+  const outlined = style.outlineWidth > 0;
+  // The stroke is centred on the glyph outline and the fill is painted over
+  // it, so only half of it shows: double it to get the width that was asked
+  // for, scaled to whatever size the text is drawn at.
+  const stroke = (style.outlineWidth * 2 * fontSize) / subtitleFontSize;
+
+  return {
+    fontFamily: openSansFont,
+    fontWeight: 600,
+    fontSize,
+    lineHeight: 1.35,
+    color: style.color,
+    textAlign: "center",
+    WebkitTextStroke: outlined ? `${stroke}px ${style.outlineColor}` : undefined,
+    paintOrder: "stroke fill",
+    // Without an outline the text leans on a strong shadow to stay readable
+    // over any scene; with one, the shadow only adds depth.
+    textShadow: outlined
+      ? `0 ${fontSize / 17}px ${fontSize / 3.4}px rgba(4,16,31,0.45)`
+      : `0 ${fontSize / 17}px ${fontSize / 2.8}px rgba(4,16,31,0.95), 0 0 ${fontSize / 1.2}px rgba(4,16,31,0.8)`,
+  };
+};
+
+// The same scrim the video/image captions use, so a subtitle stays readable
+// over a bright scene. It fades out towards the top so it reads as a shadow at
+// the foot of the frame rather than a bar. Shared by the burned-in subtitle
+// and the settings dialog's preview.
+export const subtitleScrimBackground =
+  "linear-gradient(0deg, rgba(4,16,31,0.85) 0%, rgba(4,16,31,0.6) 45%, rgba(4,16,31,0) 100%)";
+
+export const subtitleScrimStyle = (
+  fontSize = subtitleFontSize,
+): CSSProperties => ({
+  width: "100%",
+  display: "flex",
+  justifyContent: "center",
+  background: subtitleScrimBackground,
+  // Generous top padding gives the gradient room to fade before it reaches
+  // the text; the bottom keeps the old distance to the edge of the frame.
+  padding: `${fontSize * 2.4}px 8% ${fontSize * 1.65}px`,
+});

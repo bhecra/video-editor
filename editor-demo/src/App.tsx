@@ -15,7 +15,7 @@ import {
   createLayersForLayout,
 } from "../../src/scene-editor/canvas-templates";
 import { Copy, MoreVertical, Plus, Trash2 } from "lucide-react";
-import { formatDuration, typeBadgeVariant, typeLabels } from "./lib/scene-meta";
+import { formatDuration, typeLabels } from "./lib/scene-meta";
 import { PropertiesPanel } from "./components/PropertiesPanel";
 import { CanvasLayerOverlay } from "./components/CanvasLayerOverlay";
 import { SceneAudioPanel } from "./components/SceneAudioPanel";
@@ -344,7 +344,7 @@ export const App: React.FC = () => {
 
   return (
     <TooltipProvider>
-    <div className="flex h-screen flex-col bg-muted/50 text-foreground">
+    <div className="ia-glow-orbs flex h-screen flex-col text-foreground">
       <header className="flex items-center justify-between px-5 py-3">
         <div className="text-base font-semibold">
           Onboarding comercial — 30 días
@@ -408,7 +408,7 @@ export const App: React.FC = () => {
                         ESCENA {index + 1}
                       </span>
                       <div className="flex items-center gap-1">
-                        <Badge variant={typeBadgeVariant[scene.type]}>
+                        <Badge variant="outline">
                           {typeLabels[scene.type]}
                         </Badge>
                         <DropdownMenu>

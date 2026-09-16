@@ -126,6 +126,51 @@
     --focus-foreground: oklch(0.97 0.014 254.604);
 }
 
+/* UBITS "modo IA" ambient background: the three glow orbs the immersive
+   layout paints behind the LMS creator views. Offsets stay as variables so a
+   view can nudge an orb without rewriting the gradient. */
+:root {
+    --modo-ia-glow-orb-rgb-1: 26, 107, 255;
+    --modo-ia-glow-orb-rgb-2: 76, 230, 255;
+    --modo-ia-glow-orb-rgb-3: 255, 84, 22;
+    --modo-ia-glow-orb-alpha: 0.15;
+    --modo-ia-glow-orb-anchor-offset-y: -70px;
+    --modo-ia-glow-orb-center-extra-x: 50px;
+    --modo-ia-glow-orb-center-extra-y: 70px;
+    --modo-ia-glow-orb-right-extra-y: 20px;
+}
+
+.ia-glow-orbs {
+    background-color: var(--background);
+    background-image:
+        radial-gradient(
+            ellipse 100% 80% at 10%
+                calc(0% + var(--modo-ia-glow-orb-anchor-offset-y)),
+            rgba(var(--modo-ia-glow-orb-rgb-1), var(--modo-ia-glow-orb-alpha)) 0,
+            transparent 50%
+        ),
+        radial-gradient(
+            ellipse 95% 78% at
+                calc(50% + var(--modo-ia-glow-orb-center-extra-x))
+                calc(
+                    0% + var(--modo-ia-glow-orb-anchor-offset-y) +
+                        var(--modo-ia-glow-orb-center-extra-y)
+                ),
+            rgba(var(--modo-ia-glow-orb-rgb-2), var(--modo-ia-glow-orb-alpha)) 0,
+            transparent 48%
+        ),
+        radial-gradient(
+            ellipse 95% 75% at 90%
+                calc(
+                    0% + var(--modo-ia-glow-orb-anchor-offset-y) +
+                        var(--modo-ia-glow-orb-right-extra-y)
+                ),
+            rgba(var(--modo-ia-glow-orb-rgb-3), var(--modo-ia-glow-orb-alpha)) 0,
+            transparent 50%
+        );
+    background-repeat: no-repeat;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

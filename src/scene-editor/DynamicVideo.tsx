@@ -1,30 +1,20 @@
 import { Audio } from "@remotion/media";
 import { AbsoluteFill, Img, Series, useVideoConfig } from "remotion";
-import type { DynamicVideoProps } from "./scene-schema";
+import {
+  defaultSubtitleStyle,
+  type DynamicVideoProps,
+  type SubtitleStyle,
+} from "./scene-schema";
 import { SceneRenderer } from "./SceneRenderer";
-import { openSansFont } from "./fonts";
+import { subtitleScrimStyle, subtitleTextStyle } from "./canvas-styles";
 
-const Subtitle: React.FC<{ text: string }> = ({ text }) => (
-  <AbsoluteFill
-    style={{
-      justifyContent: "flex-end",
-      alignItems: "center",
-      padding: "0 8% 56px",
-    }}
-  >
-    <div
-      style={{
-        fontFamily: openSansFont,
-        fontWeight: 600,
-        fontSize: 34,
-        lineHeight: 1.35,
-        color: "#ffffff",
-        textAlign: "center",
-        // A strong shadow keeps the text readable over any scene behind it.
-        textShadow: "0 2px 12px rgba(4,16,31,0.95), 0 0 28px rgba(4,16,31,0.8)",
-      }}
-    >
-      {text}
+const Subtitle: React.FC<{ text: string; style?: SubtitleStyle }> = ({
+  text,
+  style,
+}) => (
+  <AbsoluteFill style={{ justifyContent: "flex-end" }}>
+    <div style={subtitleScrimStyle()}>
+      <div style={subtitleTextStyle(style ?? defaultSubtitleStyle)}>{text}</div>
     </div>
   </AbsoluteFill>
 );
@@ -47,7 +37,7 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({
           >
             <SceneRenderer scene={scene} />
             {settings?.subtitles && scene.script && (
-              <Subtitle text={scene.script} />
+              <Subtitle text={scene.script} style={settings.subtitleStyle} />
             )}
             {scene.audioUrl && (
               <Audio src={scene.audioUrl} volume={scene.audioVolume ?? 1} />

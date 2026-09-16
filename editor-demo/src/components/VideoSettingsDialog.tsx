@@ -1,6 +1,14 @@
 import { useRef } from "react";
 import { ImageIcon, Settings2, Trash2, Upload } from "lucide-react";
-import type { VideoSettings } from "../../../src/scene-editor/scene-schema";
+import {
+  defaultSubtitleStyle,
+  type VideoSettings,
+} from "../../../src/scene-editor/scene-schema";
+import {
+  subtitleScrimStyle,
+  subtitleTextStyle,
+} from "../../../src/scene-editor/canvas-styles";
+import { ColorField } from "./ColorField";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
 import { Slider } from "./ui/slider";
@@ -28,6 +36,9 @@ export const VideoSettingsDialog: React.FC<Props> = ({
 }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const logo = settings.logo;
+  const subtitleStyle = settings.subtitleStyle ?? defaultSubtitleStyle;
+  const patchSubtitleStyle = (patch: Partial<typeof subtitleStyle>) =>
+    onChange({ subtitleStyle: { ...subtitleStyle, ...patch } });
 
   const onLogoPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,8 +76,8 @@ export const VideoSettingsDialog: React.FC<Props> = ({
               Subtítulos
             </Label>
             <p className="text-xs text-muted-foreground">
-              Muestra el guion de cada escena abajo, con sombra marcada. Aplica
-              en vista previa y al generar.
+              Muestra el guion de cada escena abajo. Aplica en vista previa y
+              al generar.
             </p>
           </div>
           <Switch
@@ -75,6 +86,62 @@ export const VideoSettingsDialog: React.FC<Props> = ({
             onCheckedChange={(subtitles) => onChange({ subtitles })}
           />
         </div>
+
+        {settings.subtitles && (
+          <div className="space-y-3 rounded-lg border p-3">
+            <ColorField
+              label="Color del texto"
+              value={subtitleStyle.color}
+              fallback={defaultSubtitleStyle.color}
+              onChange={(color) => patchSubtitleStyle({ color })}
+              onReset={
+                subtitleStyle.color === defaultSubtitleStyle.color
+                  ? undefined
+                  : () => patchSubtitleStyle({ color: defaultSubtitleStyle.color })
+              }
+            />
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">
+                {subtitleStyle.outlineWidth === 0
+                  ? "Borde — sin borde"
+                  : `Borde — ${subtitleStyle.outlineWidth} px`}
+              </Label>
+              <Slider
+                value={[subtitleStyle.outlineWidth]}
+                min={0}
+                max={10}
+                step={1}
+                onValueChange={([outlineWidth]) =>
+                  patchSubtitleStyle({ outlineWidth })
+                }
+              />
+            </div>
+
+            {subtitleStyle.outlineWidth > 0 && (
+              <ColorField
+                label="Color del borde"
+                value={subtitleStyle.outlineColor}
+                fallback={defaultSubtitleStyle.outlineColor}
+                onChange={(outlineColor) => patchSubtitleStyle({ outlineColor })}
+              />
+            )}
+
+            {/* The backdrop runs dark to light so both the fill and the
+                outline can be judged against either, with the same scrim the
+                render paints behind the text sitting on top of it. */}
+            <div
+              className="flex items-end justify-center overflow-hidden rounded-md bg-[linear-gradient(110deg,#04101f_0%,#3b4a63_55%,#c9d3e4_100%)] pt-6"
+              aria-hidden
+            >
+              <div style={subtitleScrimStyle(18)}>
+                <span style={subtitleTextStyle(subtitleStyle, 18)}>
+                  Así se verán los subtítulos
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <Separator />
 

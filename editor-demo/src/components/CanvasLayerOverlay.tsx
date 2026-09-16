@@ -22,6 +22,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "./ui/context-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { cn } from "../lib/utils";
 
 type Props = {
@@ -119,18 +120,7 @@ export const CanvasLayerOverlay: React.FC<Props> = ({
       e.preventDefault();
       e.stopPropagation();
 
-      // Second click on an already-selected layer edits it in place.
-      if (mode === "move" && layer.id === selectedLayerId) {
-        if (layer.type === "image") {
-          pickImageFor(layer.id);
-          return;
-        }
-        if (EDITABLE_TYPES.includes(layer.type)) {
-          setEditingLayerId(layer.id);
-          return;
-        }
-      }
-
+      const wasSelected = layer.id === selectedLayerId;
       onSelectLayer(layer.id);
 
       // Capture keeps the drag (and the cursor) attached to this layer even if
@@ -177,6 +167,19 @@ export const CanvasLayerOverlay: React.FC<Props> = ({
       const onUp = () => {
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
+
+        // A press that never became a drag opens the layer for editing — but
+        // only once it was already selected, and only after the pointer is
+        // up, so moving a selected layer never trips the editor. Images are
+        // left out on purpose: they are replaced from their own handle.
+        if (
+          !dragging &&
+          mode === "move" &&
+          wasSelected &&
+          EDITABLE_TYPES.includes(layer.type)
+        ) {
+          setEditingLayerId(layer.id);
+        }
       };
 
       window.addEventListener("pointermove", onMove);
@@ -211,18 +214,18 @@ export const CanvasLayerOverlay: React.FC<Props> = ({
             <ContextMenuTrigger asChild>
               <div
                 onPointerDown={startInteraction(layer, "move")}
+                onDoubleClick={() => {
+                  if (layer.type === "image") pickImageFor(layer.id);
+                }}
                 onContextMenu={() => onSelectLayer(layer.id)}
                 className={cn(
                   "pointer-events-auto absolute rounded-sm border transition-colors",
-                  // First hover always offers to move it. Only once selected
-                  // does the cursor hint at what a second click does.
-                  !isSelected
-                    ? "cursor-move"
-                    : EDITABLE_TYPES.includes(layer.type)
-                      ? "cursor-text"
-                      : layer.type === "image"
-                        ? "cursor-pointer"
-                        : "cursor-move",
+                  // Dragging is what a press does on every layer. Only a
+                  // selected text layer switches the cursor, because there a
+                  // click also opens the editor.
+                  isSelected && EDITABLE_TYPES.includes(layer.type)
+                    ? "cursor-text"
+                    : "cursor-move",
                   isSelected
                     ? "border-primary bg-primary/10 ring-2 ring-primary/40"
                     : "border-transparent hover:border-primary/50 hover:bg-primary/5",
@@ -237,12 +240,37 @@ export const CanvasLayerOverlay: React.FC<Props> = ({
               >
                 {isSelected && (
                   <>
-                    <Badge className="absolute -top-6 left-0 whitespace-nowrap">
+                    <Badge
+                      variant="outline"
+                      className="absolute -top-6 left-0 bg-background whitespace-nowrap"
+                    >
                       {layerLabels[layer.type]}
                       {EDITABLE_TYPES.includes(layer.type) &&
                         " · clic para editar"}
-                      {layer.type === "image" && " · clic para reemplazar"}
                     </Badge>
+                    {layer.type === "image" && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label="Reemplazar imagen"
+                            // Stops the press from reaching the layer, which
+                            // would start a drag instead of opening the picker.
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              pickImageFor(layer.id);
+                            }}
+                            className="absolute -top-2.5 -right-2.5 flex size-6 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm transition-transform hover:scale-110"
+                          >
+                            <ImageUp className="size-3" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Reemplazar imagen · o doble clic
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                     <span
                       onPointerDown={startInteraction(layer, "resize")}
                       className="absolute -right-1.5 -bottom-1.5 size-3 cursor-nwse-resize rounded-full border-2 border-background bg-primary"

@@ -250,7 +250,7 @@ export const PropertiesPanel: React.FC<Props> = ({
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b px-4 py-3">
         <h2 className="text-sm font-semibold">Propiedades</h2>
-        <Badge>{typeLabels[scene.type]}</Badge>
+        <Badge variant="outline">{typeLabels[scene.type]}</Badge>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">

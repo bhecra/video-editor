@@ -155,10 +155,24 @@ export const LogoSettingsSchema = z.object({
   w: z.number(),
 });
 
+export const SubtitleStyleSchema = z.object({
+  color: zColor(),
+  outlineColor: zColor(),
+  // Stroke width in px at 1080p. 0 leaves the text without an outline.
+  outlineWidth: z.number().min(0).max(10),
+});
+
 export const VideoSettingsSchema = z.object({
   subtitles: z.boolean(),
+  subtitleStyle: SubtitleStyleSchema.optional(),
   logo: LogoSettingsSchema.optional(),
 });
+
+export const defaultSubtitleStyle: SubtitleStyle = {
+  color: "#ffffff",
+  outlineColor: "#04101f",
+  outlineWidth: 0,
+};
 
 export const defaultVideoSettings: VideoSettings = { subtitles: false };
 
@@ -169,6 +183,7 @@ export const DynamicVideoSchema = z.object({
 
 export type LogoSettings = z.infer<typeof LogoSettingsSchema>;
 export type VideoSettings = z.infer<typeof VideoSettingsSchema>;
+export type SubtitleStyle = z.infer<typeof SubtitleStyleSchema>;
 export type CanvasLayer = z.infer<typeof CanvasLayerSchema>;
 export type TextLayer = z.infer<typeof TextLayerSchema>;
 export type ImageLayer = z.infer<typeof ImageLayerSchema>;

@@ -53,7 +53,10 @@ export const LogoOverlay: React.FC<Props> = ({ logo, onChange }) => {
           width: `${logo.w}%`,
         }}
       >
-        <Badge className="absolute -top-6 left-0 opacity-0 transition-opacity group-hover:opacity-100">
+        <Badge
+          variant="outline"
+          className="absolute -top-6 left-0 bg-background opacity-0 transition-opacity group-hover:opacity-100"
+        >
           Logo
         </Badge>
         {/* Mirrors the rendered logo so the drag target matches what you see. */}
