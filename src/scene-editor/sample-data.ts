@@ -188,7 +188,6 @@ export const sampleOnboardingVideo: DynamicVideoProps = {
       type: "avatar",
       durationInSeconds: 5,
       videoUrl: "https://remotion.media/first-frame-at-4sec.webm",
-      caption: "Revisa los casos de éxito",
     },
     {
       id: "s6",
@@ -282,7 +281,6 @@ export const sampleOnboardingVideo: DynamicVideoProps = {
       type: "video",
       durationInSeconds: 5,
       videoUrl: "https://remotion.media/first-frame-at-4sec.webm",
-      caption: "Cierra la semana uno con una prueba corta",
     },
     {
       id: "s10",

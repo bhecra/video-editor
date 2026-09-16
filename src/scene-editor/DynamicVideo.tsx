@@ -11,13 +11,17 @@ import { subtitleScrimStyle, subtitleTextStyle } from "./canvas-styles";
 const Subtitle: React.FC<{ text: string; style?: SubtitleStyle }> = ({
   text,
   style,
-}) => (
-  <AbsoluteFill style={{ justifyContent: "flex-end" }}>
-    <div style={subtitleScrimStyle()}>
-      <div style={subtitleTextStyle(style ?? defaultSubtitleStyle)}>{text}</div>
-    </div>
-  </AbsoluteFill>
-);
+}) => {
+  const resolved = style ?? defaultSubtitleStyle;
+
+  return (
+    <AbsoluteFill style={{ justifyContent: "flex-end" }}>
+      <div style={subtitleScrimStyle(resolved)}>
+        <div style={subtitleTextStyle(resolved)}>{text}</div>
+      </div>
+    </AbsoluteFill>
+  );
+};
 
 export const DynamicVideo: React.FC<DynamicVideoProps> = ({
   scenes,

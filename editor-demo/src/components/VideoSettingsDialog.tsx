@@ -127,6 +127,47 @@ export const VideoSettingsDialog: React.FC<Props> = ({
               />
             )}
 
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <Label
+                  htmlFor="subtitle-background"
+                  className="text-xs text-muted-foreground"
+                >
+                  Fondo detrás del texto
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Degradado oscuro al pie del video para que el texto se lea
+                  sobre escenas claras.
+                </p>
+              </div>
+              <Switch
+                id="subtitle-background"
+                checked={subtitleStyle.background}
+                onCheckedChange={(background) =>
+                  patchSubtitleStyle({ background })
+                }
+              />
+            </div>
+
+            {subtitleStyle.background && (
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  {`Opacidad del fondo — ${Math.round(
+                    subtitleStyle.backgroundOpacity * 100,
+                  )}%`}
+                </Label>
+                <Slider
+                  value={[subtitleStyle.backgroundOpacity]}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  onValueChange={([backgroundOpacity]) =>
+                    patchSubtitleStyle({ backgroundOpacity })
+                  }
+                />
+              </div>
+            )}
+
             {/* The backdrop runs dark to light so both the fill and the
                 outline can be judged against either, with the same scrim the
                 render paints behind the text sitting on top of it. */}
@@ -134,7 +175,7 @@ export const VideoSettingsDialog: React.FC<Props> = ({
               className="flex items-end justify-center overflow-hidden rounded-md bg-[linear-gradient(110deg,#04101f_0%,#3b4a63_55%,#c9d3e4_100%)] pt-6"
               aria-hidden
             >
-              <div style={subtitleScrimStyle(18)}>
+              <div style={subtitleScrimStyle(subtitleStyle, 18)}>
                 <span style={subtitleTextStyle(subtitleStyle, 18)}>
                   Así se verán los subtítulos
                 </span>

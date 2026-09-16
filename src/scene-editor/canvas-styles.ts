@@ -145,20 +145,28 @@ export const subtitleTextStyle = (
   };
 };
 
-// The same scrim the video/image captions use, so a subtitle stays readable
-// over a bright scene. It fades out towards the top so it reads as a shadow at
-// the foot of the frame rather than a bar. Shared by the burned-in subtitle
-// and the settings dialog's preview.
-export const subtitleScrimBackground =
-  "linear-gradient(0deg, rgba(4,16,31,0.85) 0%, rgba(4,16,31,0.6) 45%, rgba(4,16,31,0) 100%)";
+// A scrim behind the subtitle, so white text stays readable over a bright
+// scene. It fades out towards the top so it reads as a shadow at the foot of
+// the frame rather than a bar. Shared by the burned-in subtitle and the
+// settings dialog's preview.
+const scrimColor = (alpha: number) => `rgba(4,16,31,${Number(alpha.toFixed(3))})`;
+
+export const subtitleScrimBackground = (opacity: number) =>
+  `linear-gradient(0deg, ${scrimColor(opacity)} 0%, ${scrimColor(
+    opacity * 0.7,
+  )} 45%, ${scrimColor(0)} 100%)`;
 
 export const subtitleScrimStyle = (
+  style: SubtitleStyle,
   fontSize = subtitleFontSize,
 ): CSSProperties => ({
   width: "100%",
   display: "flex",
   justifyContent: "center",
-  background: subtitleScrimBackground,
+  // Turning the background off keeps the padding, so the text does not move.
+  background: style.background
+    ? subtitleScrimBackground(style.backgroundOpacity)
+    : undefined,
   // Generous top padding gives the gradient room to fade before it reaches
   // the text; the bottom keeps the old distance to the edge of the frame.
   padding: `${fontSize * 2.4}px 8% ${fontSize * 1.65}px`,

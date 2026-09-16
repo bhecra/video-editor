@@ -375,14 +375,6 @@ export const PropertiesPanel: React.FC<Props> = ({
               onChange={(e) => onChangeScene({ videoUrl: e.target.value })}
             />
           </Field>
-          <Field label="Caption">
-            <Input
-              value={scene.caption ?? ""}
-              onChange={(e) =>
-                onChangeScene({ caption: e.target.value || undefined })
-              }
-            />
-          </Field>
         </>
       )}
 
@@ -392,14 +384,6 @@ export const PropertiesPanel: React.FC<Props> = ({
             <Input
               value={scene.imageUrl}
               onChange={(e) => onChangeScene({ imageUrl: e.target.value })}
-            />
-          </Field>
-          <Field label="Caption">
-            <Input
-              value={scene.caption ?? ""}
-              onChange={(e) =>
-                onChangeScene({ caption: e.target.value || undefined })
-              }
             />
           </Field>
         </>

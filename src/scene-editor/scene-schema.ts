@@ -122,21 +122,18 @@ export const AvatarSceneSchema = z.object({
   ...baseSceneFields,
   type: z.literal("avatar"),
   videoUrl: z.string(),
-  caption: z.string().optional(),
 });
 
 export const VideoSceneSchema = z.object({
   ...baseSceneFields,
   type: z.literal("video"),
   videoUrl: z.string(),
-  caption: z.string().optional(),
 });
 
 export const ImageSceneSchema = z.object({
   ...baseSceneFields,
   type: z.literal("imagen"),
   imageUrl: z.string(),
-  caption: z.string().optional(),
   accentColor: zColor().optional(),
 });
 
@@ -160,6 +157,11 @@ export const SubtitleStyleSchema = z.object({
   outlineColor: zColor(),
   // Stroke width in px at 1080p. 0 leaves the text without an outline.
   outlineWidth: z.number().min(0).max(10),
+  // Dark scrim behind the text. Off leaves the subtitle over the bare scene,
+  // where it leans on its shadow and outline to stay readable.
+  background: z.boolean().default(true),
+  // How opaque the scrim gets at the foot of the frame, where it is strongest.
+  backgroundOpacity: z.number().min(0).max(1).default(0.85),
 });
 
 export const VideoSettingsSchema = z.object({
@@ -172,6 +174,8 @@ export const defaultSubtitleStyle: SubtitleStyle = {
   color: "#ffffff",
   outlineColor: "#04101f",
   outlineWidth: 0,
+  background: true,
+  backgroundOpacity: 0.85,
 };
 
 export const defaultVideoSettings: VideoSettings = { subtitles: false };
