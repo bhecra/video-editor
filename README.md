@@ -1,54 +1,136 @@
-# Remotion video
+# Video Render — editor de escenas
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+Editor visual de video: se arma un guion por escenas (texto, imagen, video,
+avatar), se previsualiza con el mismo motor que lo va a renderizar y se genera
+el `.mp4` desde la propia interfaz.
 
-Welcome to your Remotion project!
+## Cómo se levanta
 
-## Commands
+Hacen falta dos procesos:
 
-**Install Dependencies**
-
-```console
-npm i
+```bash
+npm run render-server   # API de render en http://localhost:4000
 ```
 
-**Start Preview**
-
-```console
-npm run dev
+```bash
+npm run dev             # editor en http://localhost:5173
 ```
 
-**Render video**
+Otros comandos: `npm run studio` abre Remotion Studio sobre la misma
+composición, `npm run lint` corre ESLint y los dos `tsc`, `npm run build`
+genera el bundle de Remotion.
 
-```console
-npx remotion render
+## Estructura
+
+Tres piezas, cada una con una responsabilidad:
+
+```
+src/                      MOTOR DE VIDEO — lo que se renderiza (Remotion)
+editor-demo/              EDITOR — la interfaz (React + Vite)
+render-server/            API DE RENDER — genera el .mp4 (Express)
 ```
 
-**Upgrade Remotion**
+El contrato entre las tres es `src/video/schema/scene-schema.ts`: el editor
+produce ese objeto, el motor lo pinta y el servidor lo valida antes de
+renderizar.
 
-```console
-npx remotion upgrade
+### `src/` — motor de video
+
+```
+src/
+├── index.ts                        registerRoot
+├── Root.tsx                        registra la composición "SceneEditor"
+└── video/
+    ├── DynamicVideo.tsx            composición raíz: escenas + subtítulos + logo
+    ├── calculate-metadata.ts       duración derivada de las escenas
+    ├── renderers/                  cómo se pinta cada tipo de escena
+    │   ├── SceneRenderer.tsx       despacha por scene.type
+    │   ├── CanvasSceneRenderer.tsx capas: texto, imagen, forma, badge, lista…
+    │   └── MediaSceneRenderer.tsx  escenas de imagen, video y avatar
+    ├── schema/                     el contrato compartido
+    │   ├── scene-schema.ts         esquemas zod + tipos de escena y capa
+    │   ├── layer-fields.ts         leer/escribir un campo de una capa
+    │   └── sample-data.ts          video de ejemplo que abre el editor
+    └── theme/                      apariencia
+        ├── canvas-styles.ts        estilos de fondo, texto y subtítulos
+        ├── canvas-templates.ts     layouts predefinidos y sus capas
+        └── fonts.ts                fuentes cargadas para el render
 ```
 
-## Docs
+Hay una sola composición registrada, `SceneEditor`. El editor y el servidor le
+pasan las escenas como `inputProps`, así que lo que se ve en la vista previa es
+exactamente lo que sale renderizado.
 
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
+### `editor-demo/` — el editor
 
-## Help
+Separado por capas: la page compone tres secciones y una capa de API.
 
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
+```
+editor-demo/src/
+├── App.tsx                         monta EditorPage
+├── editor/
+│   ├── EditorPage.tsx              LA PAGE: estado raíz + layout de 3 columnas
+│   ├── EditorHeader.tsx            ajustes del video y botón "Generar video"
+│   ├── constants.ts                fps y tamaño de la composición
+│   ├── state/                      el documento que se edita
+│   │   ├── useSceneEditor.ts       escenas, settings, selección y operaciones
+│   │   └── scene-factory.ts        crear/duplicar escenas y capas
+│   ├── scenes-panel/               SECCIÓN: escenas (columna izquierda)
+│   │   ├── ScenesPanel.tsx         lista, duración total, añadir escena
+│   │   └── SceneCard.tsx           una escena de la lista
+│   ├── preview-panel/              SECCIÓN: vista previa (columna central)
+│   │   ├── PreviewPanel.tsx        pestañas editar / preview / generado
+│   │   ├── SceneCanvas.tsx         frame editable con overlays encima
+│   │   ├── CanvasLayerOverlay.tsx  mover, redimensionar y editar capas
+│   │   ├── InlineFieldEditor.tsx   edición de texto sobre el propio frame
+│   │   ├── LogoOverlay.tsx         arrastrar el logo del video
+│   │   ├── ScenePlayer.tsx         reproducción real de la composición
+│   │   ├── RenderedVideo.tsx       el .mp4 ya generado
+│   │   └── SceneAudioPanel.tsx     audio y guion de la escena
+│   ├── properties-panel/           SECCIÓN: propiedades (columna derecha)
+│   │   ├── PropertiesPanel.tsx     propiedades de la escena o de la capa
+│   │   ├── LayoutPicker.tsx        elegir layout de una escena canvas
+│   │   ├── LayersList.tsx          orden y gestión de capas
+│   │   └── VideoSettingsDialog.tsx ajustes globales: logo y subtítulos
+│   └── api/                        SECCIÓN: API para generar el video
+│       ├── config.ts               URL del servidor de render
+│       ├── render-api.ts           POST /api/render y polling del job
+│       ├── useRenderJob.ts         estado del render: progreso, error, salida
+│       └── upload-api.ts           POST /api/upload para la media local
+├── components/
+│   ├── ui/                         primitivas shadcn reutilizables
+│   └── fields/                     campos reutilizables (color, media)
+└── lib/                            utilidades (cn, etiquetas y formatos)
+```
 
-## Issues
+Nada fuera de `editor/api/` habla con el servidor de render, y nada fuera de
+`editor/state/` modifica las escenas: las secciones reciben props y emiten
+callbacks.
 
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
+Los alias evitan rutas relativas largas: `@/` apunta a `editor-demo/src` y
+`@video/` a `src/video`.
 
-## License
+### `render-server/` — API de render
 
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
+```
+render-server/
+├── server.ts             app Express: estáticos + monta los routers en /api
+├── config.ts             puerto, rutas y la composición que se renderiza
+├── bundler.ts            bundle de Remotion cacheado por mtime de src/
+├── render-jobs.ts        cola en memoria: arranca el render y reporta progreso
+├── routes/
+│   ├── render.ts         POST /api/render · GET /api/render/:jobId
+│   └── upload.ts         POST /api/upload
+└── uploads/              media subida desde el editor (fuera de git)
+```
+
+Flujo al pulsar "Generar video":
+
+1. `POST /api/render` con `{ scenes, settings }`; el servidor lo valida contra
+   `DynamicVideoSchema` y devuelve un `jobId`.
+2. El render corre en segundo plano sobre la composición `SceneEditor`.
+3. El editor consulta `GET /api/render/:jobId` cada segundo hasta que termina.
+4. El `.mp4` queda en `out/` y se sirve en `/out/<jobId>.mp4`.
+
+La media que se sube desde el editor no viaja dentro del render: se sube antes a
+`/api/upload` y en la escena solo queda la URL.

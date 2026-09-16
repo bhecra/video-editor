@@ -8,6 +8,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      // The Remotion side of the project: schema, theme and the composition the
+      // editor previews. Shared source, not a copy.
+      "@video": path.resolve(__dirname, "../src/video"),
       // Force a single React instance: the root project's copy.
       // Without this, npm installs a second react/react-dom inside
       // editor-demo/node_modules (as a peer dep of radix-ui), which

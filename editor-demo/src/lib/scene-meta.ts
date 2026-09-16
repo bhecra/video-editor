@@ -1,4 +1,4 @@
-import type { Scene } from "../../../src/scene-editor/scene-schema";
+import type { Scene } from "@video/schema/scene-schema";
 
 export const typeLabels: Record<Scene["type"], string> = {
   canvas: "Canvas",

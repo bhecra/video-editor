@@ -1,7 +1,7 @@
 {
   "name": "video-render",
   "version": "1.0.0",
-  "description": "My Remotion video",
+  "description": "Editor de video por escenas (React) sobre Remotion, con servidor de render propio",
   "repository": {},
   "license": "UNLICENSED",
   "private": true,
@@ -39,12 +39,12 @@
     "vite": "7.3.6"
   },
   "scripts": {
-    "dev": "remotion studio",
+    "dev": "cd editor-demo && vite",
+    "render-server": "tsx watch render-server/server.ts",
+    "studio": "remotion studio",
     "build": "remotion bundle",
-    "upgrade": "remotion upgrade",
-    "lint": "eslint src && tsc",
-    "demo": "cd editor-demo && vite",
-    "render-server": "tsx watch render-server/server.ts"
+    "lint": "eslint src && tsc && tsc -p editor-demo",
+    "upgrade": "remotion upgrade"
   },
   "sideEffects": [
     "*.css"

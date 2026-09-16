@@ -2,9 +2,13 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "editor-demo",
+      "name": "editor",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["vite", "--port", "5173"],
+      "runtimeArgs": [
+        "vite",
+        "--port",
+        "5173"
+      ],
       "cwd": "editor-demo",
       "port": 5173
     }
