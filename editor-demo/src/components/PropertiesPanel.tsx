@@ -1,4 +1,3 @@
-import { Plus, Trash2 } from "lucide-react";
 import {
   canvasLayouts,
   textVariants,
@@ -8,8 +7,8 @@ import {
 } from "../../../src/scene-editor/scene-schema";
 import { canvasLayoutLabels } from "../../../src/scene-editor/canvas-templates";
 import { typeLabels } from "../lib/scene-meta";
+import { LayersList } from "./LayersList";
 import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
@@ -22,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { cn } from "../lib/utils";
 
 type Props = {
   scene: Scene;
@@ -33,6 +31,7 @@ type Props = {
   onUpdateLayer: (id: string, patch: Partial<CanvasLayer>) => void;
   onAddLayer: (type: CanvasLayer["type"]) => void;
   onDeleteLayer: (id: string) => void;
+  onReorderLayer: (id: string, toIndex: number) => void;
 };
 
 const Field: React.FC<{ label: string; children: React.ReactNode }> = ({
@@ -54,16 +53,6 @@ const layerTypeLabels: Record<CanvasLayer["type"], string> = {
   stat: "Dato clave",
   quote: "Cita",
 };
-
-const addableTypes: CanvasLayer["type"][] = [
-  "text",
-  "image",
-  "shape",
-  "badge",
-  "list",
-  "stat",
-  "quote",
-];
 
 const LayerFields: React.FC<{
   layer: CanvasLayer;
@@ -222,6 +211,7 @@ export const PropertiesPanel: React.FC<Props> = ({
   onUpdateLayer,
   onAddLayer,
   onDeleteLayer,
+  onReorderLayer,
 }) => {
   const selectedLayer =
     scene.type === "canvas"
@@ -229,12 +219,13 @@ export const PropertiesPanel: React.FC<Props> = ({
       : null;
 
   return (
-    <div className="flex h-full flex-col gap-5 overflow-y-auto p-4">
-      <div className="flex items-center justify-between">
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between border-b px-4 py-3">
         <h2 className="text-sm font-semibold">Propiedades</h2>
         <Badge>{typeLabels[scene.type]}</Badge>
       </div>
 
+      <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
       <Field label="Nombre de la escena">
         <Input
           value={scene.name}
@@ -317,58 +308,14 @@ export const PropertiesPanel: React.FC<Props> = ({
 
           <Separator />
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                Capas ({scene.layers.length})
-              </h3>
-            </div>
-            <div className="flex flex-col gap-1">
-              {scene.layers.map((layer) => (
-                <div
-                  key={layer.id}
-                  className={cn(
-                    "flex items-center justify-between rounded-md border px-2 py-1.5 text-xs",
-                    layer.id === selectedLayerId
-                      ? "border-primary bg-primary/5"
-                      : "border-transparent hover:bg-muted",
-                  )}
-                >
-                  <button
-                    onClick={() => onSelectLayer(layer.id)}
-                    className="flex-1 truncate text-left font-medium"
-                  >
-                    {layerTypeLabels[layer.type]}
-                    {layer.type === "text" && (
-                      <span className="ml-1 font-normal text-muted-foreground">
-                        · {layer.text.slice(0, 18)}
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => onDeleteLayer(layer.id)}
-                    className="ml-1 text-muted-foreground hover:text-destructive"
-                    aria-label="Eliminar capa"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-1 pt-1">
-              {addableTypes.map((t) => (
-                <Button
-                  key={t}
-                  size="xs"
-                  variant="outline"
-                  onClick={() => onAddLayer(t)}
-                >
-                  <Plus className="size-3" />
-                  {layerTypeLabels[t]}
-                </Button>
-              ))}
-            </div>
-          </div>
+          <LayersList
+            layers={scene.layers}
+            selectedLayerId={selectedLayerId}
+            onSelectLayer={onSelectLayer}
+            onDeleteLayer={onDeleteLayer}
+            onAddLayer={onAddLayer}
+            onReorderLayer={onReorderLayer}
+          />
 
           {selectedLayer && (
             <>
@@ -489,6 +436,7 @@ export const PropertiesPanel: React.FC<Props> = ({
             </Field>
           </>
         )}
+        </div>
       </div>
     </div>
   );

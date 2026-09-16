@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Player, type PlayerRef } from "@remotion/player";
+import { useCallback, useMemo, useState } from "react";
+import { Player, Thumbnail } from "@remotion/player";
 import { DynamicVideo } from "../../src/scene-editor/DynamicVideo";
 import { sampleOnboardingVideo } from "../../src/scene-editor/sample-data";
 import type {
@@ -16,8 +16,12 @@ import { PropertiesPanel } from "./components/PropertiesPanel";
 import { CanvasLayerOverlay } from "./components/CanvasLayerOverlay";
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
+import { Card } from "./components/ui/card";
+import { Alert, AlertDescription } from "./components/ui/alert";
 import { ScrollArea } from "./components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "./components/ui/toggle-group";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { cn } from "./lib/utils";
 
 const FPS = 30;
@@ -28,6 +32,15 @@ type RenderState =
   | { status: "rendering"; progress: number }
   | { status: "done"; outputUrl: string }
   | { status: "error"; message: string };
+
+// Layers fade in staggered by index, so the editing surface is shown at a
+// frame where every animation has already settled.
+const settledFrame = (scene: Scene) => {
+  const layerCount = scene.type === "canvas" ? scene.layers.length : 1;
+  const lastStart = (layerCount - 1) * 4;
+  const maxFrame = Math.round(scene.durationInSeconds * FPS) - 1;
+  return Math.min(lastStart + 20, maxFrame);
+};
 
 const newLayer = (type: CanvasLayer["type"]): CanvasLayer => {
   const box = { id: `${type}-${Date.now()}`, x: 30, y: 40, w: 36, h: 18 };
@@ -64,46 +77,32 @@ export const App: React.FC = () => {
   const [scenes, setScenes] = useState<Scene[]>(sampleOnboardingVideo.scenes);
   const [selectedSceneId, setSelectedSceneId] = useState(scenes[0].id);
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"editar" | "generado">("editar");
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeTab, setActiveTab] = useState<"editar" | "preview" | "generado">(
+    "editar",
+  );
+  const [previewScope, setPreviewScope] = useState<"escena" | "completo">(
+    "escena",
+  );
   const [renderState, setRenderState] = useState<RenderState>({
     status: "idle",
   });
-  const playerRef = useRef<PlayerRef>(null);
 
   const selectedScene = scenes.find((s) => s.id === selectedSceneId)!;
 
-  useEffect(() => {
-    const player = playerRef.current;
-    if (!player) return;
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    player.addEventListener("play", onPlay);
-    player.addEventListener("pause", onPause);
-    return () => {
-      player.removeEventListener("play", onPlay);
-      player.removeEventListener("pause", onPause);
-    };
-  }, []);
-
-  const sceneStartFrames = useMemo(() => {
-    const starts: Record<string, number> = {};
-    let cursor = 0;
-    for (const scene of scenes) {
-      starts[scene.id] = cursor;
-      cursor += Math.round(scene.durationInSeconds * FPS);
-    }
-    return starts;
-  }, [scenes]);
-
   const totalSeconds = scenes.reduce((sum, s) => sum + s.durationInSeconds, 0);
+
+  const previewScenes = useMemo(
+    () => (previewScope === "escena" ? [selectedScene] : scenes),
+    [previewScope, selectedScene, scenes],
+  );
+  const previewSeconds = previewScenes.reduce(
+    (sum, s) => sum + s.durationInSeconds,
+    0,
+  );
 
   const handleSelectScene = (scene: Scene) => {
     setSelectedSceneId(scene.id);
     setSelectedLayerId(null);
-    setActiveTab("editar");
-    playerRef.current?.pause();
-    playerRef.current?.seekTo(sceneStartFrames[scene.id] + 20);
   };
 
   const patchScene = useCallback(
@@ -169,6 +168,24 @@ export const App: React.FC = () => {
     [patchScene],
   );
 
+  // Array order is paint order: the last layer is the front-most one.
+  const handleReorderLayer = useCallback(
+    (id: string, toIndex: number) => {
+      patchScene((s) => {
+        if (s.type !== "canvas") return s;
+        const from = s.layers.findIndex((l) => l.id === id);
+        if (from < 0) return s;
+        const target = Math.max(0, Math.min(s.layers.length - 1, toIndex));
+        if (target === from) return s;
+        const layers = [...s.layers];
+        const [moved] = layers.splice(from, 1);
+        layers.splice(target, 0, moved);
+        return { ...s, layers };
+      });
+    },
+    [patchScene],
+  );
+
   const handleGenerate = async () => {
     setRenderState({ status: "rendering", progress: 0 });
 
@@ -216,16 +233,11 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
-      <header className="flex items-center justify-between border-b px-6 py-3">
-        <div>
-          <div className="text-base font-semibold">
-            Onboarding comercial — 30 días
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Escenas ({scenes.length}) · {formatDuration(totalSeconds)} min en
-            total
-          </div>
+    <TooltipProvider>
+    <div className="flex h-screen flex-col bg-muted/50 text-foreground">
+      <header className="flex items-center justify-between px-5 py-3">
+        <div className="text-base font-semibold">
+          Onboarding comercial — 30 días
         </div>
         <div className="flex items-center gap-4">
           {renderState.status === "rendering" && (
@@ -234,9 +246,11 @@ export const App: React.FC = () => {
             </span>
           )}
           {renderState.status === "error" && (
-            <span className="max-w-xs text-xs text-destructive">
-              {renderState.message}
-            </span>
+            <Alert variant="destructive" className="max-w-sm py-2">
+              <AlertDescription className="text-xs">
+                {renderState.message}
+              </AlertDescription>
+            </Alert>
           )}
           <Button
             onClick={handleGenerate}
@@ -249,10 +263,20 @@ export const App: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-72 border-r">
-          <ScrollArea className="h-full p-3">
-            <div className="flex flex-col gap-2">
+      {/* pt-1 leaves room for the cards' ring, which is painted outside their
+          box and would otherwise be clipped by overflow-hidden. */}
+      <div className="flex flex-1 gap-4 overflow-hidden px-4 pt-1 pb-4">
+        <Card className="flex w-72 flex-col gap-0 py-0 shadow-sm">
+          <div className="flex items-baseline gap-2 border-b px-4 py-3">
+            <h2 className="text-sm font-semibold">
+              Escenas ({scenes.length})
+            </h2>
+            <span className="text-xs text-muted-foreground">
+              {formatDuration(totalSeconds)} min en total
+            </span>
+          </div>
+          <ScrollArea className="flex-1 p-2">
+            <div className="flex flex-col gap-1">
               {scenes.map((scene, index) => {
                 const isSelected = scene.id === selectedSceneId;
                 return (
@@ -260,13 +284,13 @@ export const App: React.FC = () => {
                     key={scene.id}
                     onClick={() => handleSelectScene(scene)}
                     className={cn(
-                      "rounded-lg border p-3 text-left transition-colors",
+                      "rounded-lg border-l-2 px-3 py-2 text-left transition-colors",
                       isSelected
-                        ? "border-primary bg-primary/5"
-                        : "border-transparent hover:bg-muted",
+                        ? "border-l-primary bg-primary/5"
+                        : "border-l-transparent hover:bg-muted",
                     )}
                   >
-                    <div className="mb-1.5 flex items-center justify-between">
+                    <div className="mb-1 flex items-center justify-between gap-2">
                       <span className="text-[11px] font-semibold text-muted-foreground">
                         ESCENA {index + 1}
                       </span>
@@ -274,9 +298,7 @@ export const App: React.FC = () => {
                         {typeLabels[scene.type]}
                       </Badge>
                     </div>
-                    <div className="mb-1 text-sm font-semibold">
-                      {scene.name}
-                    </div>
+                    <div className="text-sm font-semibold">{scene.name}</div>
                     <div className="font-mono text-xs text-muted-foreground">
                       0:{scene.durationInSeconds.toString().padStart(2, "0")}
                     </div>
@@ -285,17 +307,26 @@ export const App: React.FC = () => {
               })}
             </div>
           </ScrollArea>
-        </aside>
+        </Card>
 
-        <main className="flex flex-1 items-center justify-center overflow-hidden p-8">
+        <Card className="flex flex-1 flex-col gap-0 overflow-hidden py-0 shadow-sm">
           <Tabs
             value={activeTab}
-            onValueChange={(v) => setActiveTab(v as "editar" | "generado")}
-            className="w-full max-w-4xl"
+            onValueChange={(v) =>
+              setActiveTab(v as "editar" | "preview" | "generado")
+            }
+            className="flex flex-1 flex-col gap-0 overflow-hidden"
           >
-            <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 border-b px-4 py-2.5">
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-sm font-semibold">Vista previa</h2>
+                <span className="text-xs text-muted-foreground">
+                  Escena {scenes.indexOf(selectedScene) + 1}
+                </span>
+              </div>
               <TabsList>
                 <TabsTrigger value="editar">Editar</TabsTrigger>
+                <TabsTrigger value="preview">Vista previa</TabsTrigger>
                 <TabsTrigger
                   value="generado"
                   disabled={renderState.status !== "done"}
@@ -303,21 +334,45 @@ export const App: React.FC = () => {
                   Video generado
                 </TabsTrigger>
               </TabsList>
-              {activeTab === "editar" && (
-                <span className="text-xs text-muted-foreground">
-                  {isPlaying
-                    ? "Pausa para editar las capas"
-                    : "Arrastra para mover · esquina para redimensionar · Supr para borrar"}
-                </span>
-              )}
             </div>
+
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 overflow-auto p-6">
+              <div className="w-full max-w-3xl">
+
             <TabsContent value="editar">
-              <div className="relative overflow-hidden rounded-2xl shadow-lg">
-                <Player
-                  ref={playerRef}
+              <div className="relative overflow-hidden rounded-xl ring-1 ring-foreground/10">
+                <Thumbnail
                   component={DynamicVideo}
-                  inputProps={{ scenes }}
-                  durationInFrames={Math.round(totalSeconds * FPS)}
+                  inputProps={{ scenes: [selectedScene] }}
+                  frameToDisplay={settledFrame(selectedScene)}
+                  durationInFrames={Math.round(
+                    selectedScene.durationInSeconds * FPS,
+                  )}
+                  compositionWidth={1920}
+                  compositionHeight={1080}
+                  fps={FPS}
+                  style={{ width: "100%" }}
+                />
+                {selectedScene.type === "canvas" && (
+                  <CanvasLayerOverlay
+                    scene={selectedScene}
+                    selectedLayerId={selectedLayerId}
+                    onSelectLayer={setSelectedLayerId}
+                    onUpdateLayer={handleUpdateLayer}
+                    onDeleteLayer={handleDeleteLayer}
+                    onReorderLayer={handleReorderLayer}
+                  />
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="preview">
+              <div className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
+                <Player
+                  key={previewScope + selectedScene.id}
+                  component={DynamicVideo}
+                  inputProps={{ scenes: previewScenes }}
+                  durationInFrames={Math.round(previewSeconds * FPS)}
                   compositionWidth={1920}
                   compositionHeight={1080}
                   fps={FPS}
@@ -325,34 +380,51 @@ export const App: React.FC = () => {
                   controls
                   loop
                 />
-                {!isPlaying && selectedScene.type === "canvas" && (
-                  <CanvasLayerOverlay
-                    scene={selectedScene}
-                    selectedLayerId={selectedLayerId}
-                    onSelectLayer={setSelectedLayerId}
-                    onUpdateLayer={handleUpdateLayer}
-                    onDeleteLayer={handleDeleteLayer}
-                  />
-                )}
               </div>
             </TabsContent>
+
             <TabsContent value="generado">
               {renderState.status === "done" ? (
                 <video
                   src={renderState.outputUrl}
                   controls
-                  className="w-full rounded-2xl shadow-lg"
+                  className="w-full rounded-xl"
                 />
               ) : (
-                <div className="flex aspect-video w-full items-center justify-center rounded-2xl border border-dashed text-sm text-muted-foreground">
+                <div className="flex aspect-video w-full items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
                   Aún no has generado un video. Dale a "Generar video".
                 </div>
               )}
             </TabsContent>
-          </Tabs>
-        </main>
+              </div>
 
-        <aside className="w-80 border-l">
+              {activeTab === "editar" && (
+                <span className="text-xs text-muted-foreground">
+                  Arrastra para mover · esquina para redimensionar · Supr para
+                  borrar
+                </span>
+              )}
+
+              {activeTab === "preview" && (
+                <ToggleGroup
+                  type="single"
+                  size="sm"
+                  value={previewScope}
+                  onValueChange={(v) =>
+                    v && setPreviewScope(v as "escena" | "completo")
+                  }
+                >
+                  <ToggleGroupItem value="escena">Esta escena</ToggleGroupItem>
+                  <ToggleGroupItem value="completo">
+                    Video completo
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              )}
+            </div>
+          </Tabs>
+        </Card>
+
+        <Card className="flex w-80 flex-col gap-0 overflow-hidden py-0 shadow-sm">
           <PropertiesPanel
             scene={selectedScene}
             selectedLayerId={selectedLayerId}
@@ -362,9 +434,11 @@ export const App: React.FC = () => {
             onUpdateLayer={handleUpdateLayer}
             onAddLayer={handleAddLayer}
             onDeleteLayer={handleDeleteLayer}
+            onReorderLayer={handleReorderLayer}
           />
-        </aside>
+        </Card>
       </div>
     </div>
+    </TooltipProvider>
   );
 };

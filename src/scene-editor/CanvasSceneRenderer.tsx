@@ -6,87 +6,10 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import type { CSSProperties, ReactNode } from "react";
-import type {
-  CanvasBackground,
-  CanvasLayer,
-  CanvasScene,
-  TextLayer,
-} from "./scene-schema";
+import type { ReactNode } from "react";
+import type { CanvasLayer, CanvasScene } from "./scene-schema";
 import { interFont, monoFont, openSansFont } from "./fonts";
-
-const backgroundStyle = (
-  background: CanvasBackground,
-  accentColor: string,
-): CSSProperties => {
-  switch (background) {
-    case "gradient":
-      return {
-        background: `linear-gradient(135deg, #04101f 0%, ${accentColor} 100%)`,
-      };
-    case "dark":
-      return { backgroundColor: "#04101f" };
-    case "accent":
-      return { backgroundColor: accentColor };
-    case "light":
-    default:
-      return { backgroundColor: "#f8faff" };
-  }
-};
-
-const isDarkBackground = (background: CanvasBackground) =>
-  background === "dark" || background === "gradient" || background === "accent";
-
-const textStyles = (
-  variant: TextLayer["variant"],
-  onDark: boolean,
-): CSSProperties => {
-  switch (variant) {
-    case "eyebrow":
-      return {
-        fontFamily: interFont,
-        fontWeight: 600,
-        fontSize: 24,
-        letterSpacing: 2,
-        textTransform: "uppercase",
-        color: onDark ? "#cadeff" : "#1a6bff",
-      };
-    case "title":
-      return {
-        fontFamily: interFont,
-        fontWeight: 700,
-        fontSize: 72,
-        lineHeight: 1.05,
-        color: onDark ? "#ffffff" : "#04101f",
-      };
-    case "subtitle":
-      return {
-        fontFamily: interFont,
-        fontWeight: 600,
-        fontSize: 36,
-        lineHeight: 1.2,
-        color: onDark ? "#cadeff" : "#2a303f",
-      };
-    case "statement":
-      return {
-        fontFamily: interFont,
-        fontWeight: 700,
-        fontSize: 64,
-        lineHeight: 1.2,
-        textAlign: "center",
-        color: onDark ? "#ffffff" : "#04101f",
-      };
-    case "body":
-    default:
-      return {
-        fontFamily: openSansFont,
-        fontWeight: 400,
-        fontSize: 28,
-        lineHeight: 1.5,
-        color: onDark ? "#cadeff" : "#2a303f",
-      };
-  }
-};
+import { backgroundStyle, isDarkBackground, textStyles } from "./canvas-styles";
 
 const LayerBox: React.FC<{
   layer: CanvasLayer;
@@ -100,6 +23,9 @@ const LayerBox: React.FC<{
 
   return (
     <div
+      // The editor locates each layer and its editable fields through these
+      // attributes, so inline editing never needs to duplicate this layout.
+      data-layer-id={layer.id}
       style={{
         position: "absolute",
         left: `${layer.x}%`,
@@ -135,6 +61,7 @@ const LayerContent: React.FC<{
     case "text":
       return (
         <div
+          data-field="text"
           style={{
             ...textStyles(layer.variant, onDark),
             display: "flex",
@@ -196,6 +123,7 @@ const LayerContent: React.FC<{
           }}
         >
           <div
+            data-field="title"
             style={{
               fontFamily: interFont,
               fontWeight: 700,
@@ -207,6 +135,7 @@ const LayerContent: React.FC<{
           </div>
           {layer.subtitle && (
             <div
+              data-field="subtitle"
               style={{
                 fontFamily: openSansFont,
                 fontWeight: 400,
@@ -261,6 +190,7 @@ const LayerContent: React.FC<{
                 {layer.ordered ? i + 1 : "•"}
               </div>
               <div
+                data-field={`items.${i}`}
                 style={{
                   fontFamily: openSansFont,
                   fontWeight: 400,
@@ -294,6 +224,7 @@ const LayerContent: React.FC<{
         >
           {layer.label && (
             <div
+              data-field="label"
               style={{
                 fontFamily: interFont,
                 fontWeight: 600,
@@ -307,6 +238,7 @@ const LayerContent: React.FC<{
             </div>
           )}
           <div
+            data-field="value"
             style={{
               fontFamily: monoFont,
               fontWeight: 700,
@@ -345,6 +277,7 @@ const LayerContent: React.FC<{
             &ldquo;
           </div>
           <div
+            data-field="quote"
             style={{
               fontFamily: interFont,
               fontWeight: 600,
@@ -365,7 +298,8 @@ const LayerContent: React.FC<{
                 color: onDark ? "#cadeff" : "#6b7280",
               }}
             >
-              — {layer.author}
+              {/* The dash stays outside the field so editing only writes the name. */}
+              — <span data-field="author">{layer.author}</span>
             </div>
           )}
         </div>
