@@ -1,0 +1,160 @@
+import { z } from "zod";
+import { zColor } from "@remotion/zod-types";
+
+const baseSceneFields = {
+  id: z.string(),
+  name: z.string(),
+  durationInSeconds: z.number().min(1),
+  audioUrl: z.string().optional(),
+  audioVolume: z.number().min(0).max(1).optional(),
+};
+
+export const canvasLayouts = [
+  "portada",
+  "texto-imagen",
+  "dato-clave",
+  "cita",
+  "una-columna",
+  "dos-columnas",
+  "lista-ordenada",
+  "agenda-indice",
+  "divisor-seccion",
+  "afirmacion",
+] as const;
+
+export type CanvasLayout = (typeof canvasLayouts)[number];
+
+// Every layer is positioned in % of the slide, like a PowerPoint text box.
+const layerBox = {
+  id: z.string(),
+  x: z.number(),
+  y: z.number(),
+  w: z.number(),
+  h: z.number(),
+  rotation: z.number().optional(),
+};
+
+export const textVariants = [
+  "eyebrow",
+  "title",
+  "subtitle",
+  "body",
+  "statement",
+] as const;
+
+export const TextLayerSchema = z.object({
+  ...layerBox,
+  type: z.literal("text"),
+  text: z.string(),
+  variant: z.enum(textVariants),
+});
+
+export const ImageLayerSchema = z.object({
+  ...layerBox,
+  type: z.literal("image"),
+  src: z.string(),
+});
+
+export const ShapeLayerSchema = z.object({
+  ...layerBox,
+  type: z.literal("shape"),
+  fill: z.enum(["accent", "white", "dark", "tint"]),
+});
+
+export const BadgeLayerSchema = z.object({
+  ...layerBox,
+  type: z.literal("badge"),
+  title: z.string(),
+  subtitle: z.string().optional(),
+});
+
+export const ListLayerSchema = z.object({
+  ...layerBox,
+  type: z.literal("list"),
+  items: z.array(z.string()),
+  ordered: z.boolean(),
+});
+
+export const StatLayerSchema = z.object({
+  ...layerBox,
+  type: z.literal("stat"),
+  value: z.string(),
+  label: z.string().optional(),
+});
+
+export const QuoteLayerSchema = z.object({
+  ...layerBox,
+  type: z.literal("quote"),
+  quote: z.string(),
+  author: z.string().optional(),
+});
+
+export const CanvasLayerSchema = z.discriminatedUnion("type", [
+  TextLayerSchema,
+  ImageLayerSchema,
+  ShapeLayerSchema,
+  BadgeLayerSchema,
+  ListLayerSchema,
+  StatLayerSchema,
+  QuoteLayerSchema,
+]);
+
+export const canvasBackgrounds = ["gradient", "light", "dark", "accent"] as const;
+
+export const CanvasSceneSchema = z.object({
+  ...baseSceneFields,
+  type: z.literal("canvas"),
+  layout: z.enum(canvasLayouts),
+  accentColor: zColor(),
+  background: z.enum(canvasBackgrounds),
+  layers: z.array(CanvasLayerSchema),
+});
+
+export const AvatarSceneSchema = z.object({
+  ...baseSceneFields,
+  type: z.literal("avatar"),
+  videoUrl: z.string(),
+  caption: z.string().optional(),
+});
+
+export const VideoSceneSchema = z.object({
+  ...baseSceneFields,
+  type: z.literal("video"),
+  videoUrl: z.string(),
+  caption: z.string().optional(),
+});
+
+export const ImageSceneSchema = z.object({
+  ...baseSceneFields,
+  type: z.literal("imagen"),
+  imageUrl: z.string(),
+  caption: z.string().optional(),
+  accentColor: zColor().optional(),
+});
+
+export const SceneSchema = z.discriminatedUnion("type", [
+  CanvasSceneSchema,
+  AvatarSceneSchema,
+  VideoSceneSchema,
+  ImageSceneSchema,
+]);
+
+export const DynamicVideoSchema = z.object({
+  scenes: z.array(SceneSchema),
+});
+
+export type CanvasLayer = z.infer<typeof CanvasLayerSchema>;
+export type TextLayer = z.infer<typeof TextLayerSchema>;
+export type ImageLayer = z.infer<typeof ImageLayerSchema>;
+export type ShapeLayer = z.infer<typeof ShapeLayerSchema>;
+export type BadgeLayer = z.infer<typeof BadgeLayerSchema>;
+export type ListLayer = z.infer<typeof ListLayerSchema>;
+export type StatLayer = z.infer<typeof StatLayerSchema>;
+export type QuoteLayer = z.infer<typeof QuoteLayerSchema>;
+export type CanvasBackground = z.infer<typeof CanvasSceneSchema>["background"];
+export type Scene = z.infer<typeof SceneSchema>;
+export type CanvasScene = z.infer<typeof CanvasSceneSchema>;
+export type AvatarScene = z.infer<typeof AvatarSceneSchema>;
+export type VideoScene = z.infer<typeof VideoSceneSchema>;
+export type ImageScene = z.infer<typeof ImageSceneSchema>;
+export type DynamicVideoProps = z.infer<typeof DynamicVideoSchema>;

@@ -6,26 +6,45 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "@remotion/bundler": "4.0.525",
     "@remotion/cli": "4.0.525",
+    "@remotion/google-fonts": "4.0.525",
+    "@remotion/lambda": "4.0.525",
+    "@remotion/media": "4.0.525",
+    "@remotion/player": "4.0.525",
+    "@remotion/renderer": "4.0.525",
+    "@remotion/tailwind-v4": "4.0.525",
+    "@remotion/transitions": "4.0.525",
+    "@remotion/zod-types": "4.0.525",
+    "cors": "2.8.6",
+    "express": "5.2.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "4.0.525",
-    "@remotion/tailwind-v4": "4.0.525",
-    "tailwindcss": "4.0.0"
+    "tailwindcss": "4.0.0",
+    "zod": "4.5.4"
   },
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.525",
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.6",
     "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.7",
     "@types/web": "0.0.166",
+    "@vitejs/plugin-react": "5.1.4",
     "eslint": "9.19.0",
     "prettier": "3.8.1",
-    "typescript": "5.9.3"
+    "tsx": "4.23.13",
+    "typescript": "5.9.3",
+    "vite": "7.3.6"
   },
   "scripts": {
     "dev": "remotion studio",
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",
-    "lint": "eslint src && tsc"
+    "lint": "eslint src && tsc",
+    "demo": "cd editor-demo && vite",
+    "render-server": "tsx render-server/server.ts"
   },
   "sideEffects": [
     "*.css"
