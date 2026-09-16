@@ -58,7 +58,9 @@ export const SceneCard: React.FC<Props> = ({
         <span className="font-mono text-xs text-muted-foreground">
           {formatDuration(scene.durationInSeconds)}
         </span>
-        <Badge variant="outline">{typeLabels[scene.type]}</Badge>
+        <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
+          {typeLabels[scene.type]}
+        </Badge>
       </div>
     </div>
 
