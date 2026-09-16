@@ -14,7 +14,7 @@ export const SceneRenderer: React.FC<{ scene: Scene }> = ({ scene }) => {
       return <AvatarSceneRenderer scene={scene} />;
     case "video":
       return <VideoSceneRenderer scene={scene} />;
-    case "imagen":
+    case "image":
       return <ImageSceneRenderer scene={scene} />;
     default:
       return null;

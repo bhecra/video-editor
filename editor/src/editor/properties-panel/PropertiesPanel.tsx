@@ -377,7 +377,7 @@ export const PropertiesPanel: React.FC<Props> = ({
         </>
       )}
 
-      {scene.type === "imagen" && (
+      {scene.type === "image" && (
         <>
           <MediaField
             kind="image"

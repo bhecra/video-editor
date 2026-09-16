@@ -63,11 +63,11 @@ export const createScene = (type: Scene["type"]): Scene => {
         background: canvasTemplates["una-columna"].background,
         layers: createLayersForLayout("una-columna"),
       };
-    case "imagen":
+    case "image":
       return {
         id,
         name: "Nueva imagen",
-        type: "imagen",
+        type: "image",
         durationInSeconds: 5,
         imageUrl: "",
       };

@@ -4,7 +4,7 @@ export const typeLabels: Record<Scene["type"], string> = {
   canvas: "Canvas",
   avatar: "Avatar",
   video: "Video",
-  imagen: "Imagen",
+  image: "Imagen",
 };
 
 export const formatDuration = (seconds: number) => {

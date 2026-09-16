@@ -1,6 +1,8 @@
-import type { DynamicVideoProps } from "./scene-schema";
+import type { DynamicVideoProps } from "@video/schema/scene-schema";
 
-export const sampleOnboardingVideo: DynamicVideoProps = {
+// The document the editor opens with. It is product content, not part of the
+// contract: the engine in src/video/ never imports it.
+export const onboardingVideo: DynamicVideoProps = {
   settings: { subtitles: false },
   scenes: [
     {

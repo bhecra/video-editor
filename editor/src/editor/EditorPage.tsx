@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { sampleOnboardingVideo } from "@video/schema/sample-data";
+import { onboardingVideo } from "./state/sample-video";
 import { Card } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRenderJob } from "./api/useRenderJob";
@@ -20,7 +20,7 @@ const VIDEO_TITLE = "Onboarding comercial — 30 días";
  * lays out the three columns — scenes, preview, properties.
  */
 export const EditorPage: React.FC = () => {
-  const editor = useSceneEditor(sampleOnboardingVideo);
+  const editor = useSceneEditor(onboardingVideo);
   const [activeTab, setActiveTab] = useState<PreviewTab>("editar");
   const [previewScope, setPreviewScope] = useState<PreviewScope>("escena");
 

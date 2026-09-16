@@ -62,12 +62,15 @@ produzca ese objeto sirve igual.
 ```
 
 Las flechas van en un solo sentido: `src/video/` no sabe que existe un editor
-ni un servidor. Cada uno importa lo que necesita de él:
+ni un servidor, y tampoco contiene contenido — el guion de ejemplo vive en el
+editor, y Remotion Studio abre con una escena de relleno. Cada uno importa lo
+que necesita del motor:
 
 | Quién | Qué importa | Para qué |
 |---|---|---|
 | `editor/` | `schema/` | tipar y construir las escenas |
 | `editor/` | `DynamicVideo` + `theme/` | pintar la vista previa en el navegador |
+| `editor/` | `video-config` | que el Player use los mismos fps y tamaño del render |
 | `render-server/` | `schema/` | validar el payload antes de renderizar |
 | `render-server/` | `src/index.ts` (bundle) | renderizar el video de verdad |
 
@@ -83,6 +86,7 @@ src/
 ├── Root.tsx                        registra la composición "SceneEditor"
 └── video/
     ├── DynamicVideo.tsx            composición raíz: escenas + subtítulos + logo
+    ├── video-config.ts             fps y tamaño — fuente única para todo
     ├── calculate-metadata.ts       duración derivada de las escenas
     ├── renderers/                  cómo se pinta cada tipo de escena
     │   ├── SceneRenderer.tsx       despacha por scene.type
@@ -90,8 +94,7 @@ src/
     │   └── MediaSceneRenderer.tsx  escenas de imagen, video y avatar
     ├── schema/                     el contrato compartido
     │   ├── scene-schema.ts         esquemas zod + tipos de escena y capa
-    │   ├── layer-fields.ts         leer/escribir un campo de una capa
-    │   └── sample-data.ts          video de ejemplo que abre el editor
+    │   └── layer-fields.ts         leer/escribir un campo de una capa
     └── theme/                      apariencia
         ├── canvas-styles.ts        estilos de fondo, texto y subtítulos
         ├── canvas-templates.ts     layouts predefinidos y sus capas
@@ -112,10 +115,10 @@ editor/src/
 ├── editor/
 │   ├── EditorPage.tsx              LA PAGE: estado raíz + layout de 3 columnas
 │   ├── EditorHeader.tsx            ajustes del video y botón "Generar video"
-│   ├── constants.ts                fps y tamaño de la composición
 │   ├── state/                      el documento que se edita
 │   │   ├── useSceneEditor.ts       escenas, settings, selección y operaciones
-│   │   └── scene-factory.ts        crear/duplicar escenas y capas
+│   │   ├── scene-factory.ts        crear/duplicar escenas y capas
+│   │   └── sample-video.ts         el guion con el que abre el editor
 │   ├── scenes-panel/               SECCIÓN: escenas (columna izquierda)
 │   │   ├── ScenesPanel.tsx         lista, duración total, añadir escena
 │   │   └── SceneCard.tsx           una escena de la lista

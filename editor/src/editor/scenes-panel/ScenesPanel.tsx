@@ -22,7 +22,7 @@ type Props = {
   onDeleteScene: (id: string) => void;
 };
 
-const sceneTypes = ["canvas", "imagen", "video", "avatar"] as const;
+const sceneTypes = ["canvas", "image", "video", "avatar"] as const;
 
 /** Left column: the video's scene list and how new scenes get in. */
 export const ScenesPanel: React.FC<Props> = ({

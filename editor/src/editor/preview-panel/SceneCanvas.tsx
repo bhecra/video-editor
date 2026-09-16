@@ -6,7 +6,7 @@ import type {
   Scene,
   VideoSettings,
 } from "@video/schema/scene-schema";
-import { COMPOSITION_HEIGHT, COMPOSITION_WIDTH, FPS } from "../constants";
+import { COMPOSITION_HEIGHT, COMPOSITION_WIDTH, FPS } from "@video/video-config";
 import { CanvasLayerOverlay } from "./CanvasLayerOverlay";
 import { LogoOverlay } from "./LogoOverlay";
 

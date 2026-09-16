@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import type { CanvasLayer } from "@video/schema/scene-schema";
 import { getLayerField } from "@video/schema/layer-fields";
 
-import { COMPOSITION_WIDTH } from "../constants";
+import { COMPOSITION_WIDTH } from "@video/video-config";
 
 type MeasuredField = {
   field: string;

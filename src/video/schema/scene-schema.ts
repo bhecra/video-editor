@@ -132,7 +132,7 @@ export const VideoSceneSchema = z.object({
 
 export const ImageSceneSchema = z.object({
   ...baseSceneFields,
-  type: z.literal("imagen"),
+  type: z.literal("image"),
   imageUrl: z.string(),
   accentColor: zColor().optional(),
 });

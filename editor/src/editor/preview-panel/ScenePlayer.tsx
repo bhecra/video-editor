@@ -1,7 +1,7 @@
 import { Player } from "@remotion/player";
 import { DynamicVideo } from "@video/DynamicVideo";
 import type { Scene, VideoSettings } from "@video/schema/scene-schema";
-import { COMPOSITION_HEIGHT, COMPOSITION_WIDTH, FPS } from "../constants";
+import { COMPOSITION_HEIGHT, COMPOSITION_WIDTH, FPS } from "@video/video-config";
 
 type Props = {
   scenes: Scene[];

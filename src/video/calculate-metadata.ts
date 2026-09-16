@@ -1,7 +1,6 @@
 import type { CalculateMetadataFunction } from "remotion";
 import type { DynamicVideoProps } from "./schema/scene-schema";
-
-const FPS = 30;
+import { FPS } from "./video-config";
 
 export const calculateDynamicVideoMetadata: CalculateMetadataFunction<
   DynamicVideoProps
