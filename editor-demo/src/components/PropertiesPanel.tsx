@@ -1,13 +1,19 @@
 import {
-  canvasLayouts,
   textVariants,
   type CanvasLayer,
   type CanvasScene,
   type Scene,
+  shapeFills,
 } from "../../../src/scene-editor/scene-schema";
-import { canvasLayoutLabels } from "../../../src/scene-editor/canvas-templates";
 import { typeLabels } from "../lib/scene-meta";
 import { LayersList } from "./LayersList";
+import { ColorField } from "./ColorField";
+import { LayoutPicker } from "./LayoutPicker";
+import {
+  isDarkBackground,
+  shapeFillColor,
+  textStyles,
+} from "../../../src/scene-editor/canvas-styles";
 import { Badge } from "./ui/badge";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -56,8 +62,9 @@ const layerTypeLabels: Record<CanvasLayer["type"], string> = {
 
 const LayerFields: React.FC<{
   layer: CanvasLayer;
+  scene: CanvasScene;
   onUpdate: (patch: Partial<CanvasLayer>) => void;
-}> = ({ layer, onUpdate }) => {
+}> = ({ layer, scene, onUpdate }) => {
   switch (layer.type) {
     case "text":
       return (
@@ -88,6 +95,18 @@ const LayerFields: React.FC<{
               onChange={(e) => onUpdate({ text: e.target.value })}
             />
           </Field>
+          <ColorField
+            label="Color del texto"
+            value={layer.color}
+            fallback={
+              textStyles(
+                layer.variant,
+                isDarkBackground(scene.background),
+              ).color as string
+            }
+            onChange={(color) => onUpdate({ color })}
+            onReset={() => onUpdate({ color: undefined })}
+          />
         </>
       );
 
@@ -103,23 +122,32 @@ const LayerFields: React.FC<{
 
     case "shape":
       return (
-        <Field label="Relleno">
-          <Select
-            value={layer.fill}
-            onValueChange={(v) => onUpdate({ fill: v as typeof layer.fill })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {(["accent", "white", "dark", "tint"] as const).map((f) => (
-                <SelectItem key={f} value={f}>
-                  {f}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
+        <>
+          <Field label="Relleno">
+            <Select
+              value={layer.fill}
+              onValueChange={(v) => onUpdate({ fill: v as typeof layer.fill })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {shapeFills.map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {f}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <ColorField
+            label="Color de la forma"
+            value={layer.color}
+            fallback={shapeFillColor(layer.fill, scene.accentColor)}
+            onChange={(color) => onUpdate({ color })}
+            onReset={() => onUpdate({ color: undefined })}
+          />
+        </>
       );
 
     case "badge":
@@ -225,7 +253,7 @@ export const PropertiesPanel: React.FC<Props> = ({
         <Badge>{typeLabels[scene.type]}</Badge>
       </div>
 
-      <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
       <Field label="Nombre de la escena">
         <Input
           value={scene.name}
@@ -248,41 +276,17 @@ export const PropertiesPanel: React.FC<Props> = ({
         <>
           <Separator />
 
-          <Field label="Plantilla">
-            <Select
-              value={scene.layout}
-              onValueChange={(v) =>
-                onChangeLayout(v as CanvasScene["layout"])
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {canvasLayouts.map((layout) => (
-                  <SelectItem key={layout} value={layout}>
-                    {canvasLayoutLabels[layout]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
+          <LayoutPicker
+            value={scene.layout}
+            onChange={(layout) => onChangeLayout(layout)}
+          />
 
-          <Field label="Color de acento">
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={scene.accentColor}
-                onChange={(e) => onChangeScene({ accentColor: e.target.value })}
-                className="h-8 w-10 cursor-pointer rounded-md border border-input bg-transparent p-0.5"
-              />
-              <Input
-                value={scene.accentColor}
-                onChange={(e) => onChangeScene({ accentColor: e.target.value })}
-                className="flex-1"
-              />
-            </div>
-          </Field>
+          <ColorField
+            label="Color de acento"
+            value={scene.accentColor}
+            fallback={scene.accentColor}
+            onChange={(accentColor) => onChangeScene({ accentColor })}
+          />
 
           <Field label="Fondo">
             <Select
@@ -326,6 +330,7 @@ export const PropertiesPanel: React.FC<Props> = ({
                 </h3>
                 <LayerFields
                   layer={selectedLayer}
+                  scene={scene}
                   onUpdate={(patch) => onUpdateLayer(selectedLayer.id, patch)}
                 />
                 <div className="grid grid-cols-2 gap-2">
@@ -400,43 +405,6 @@ export const PropertiesPanel: React.FC<Props> = ({
         </>
       )}
 
-      <Separator />
-
-      <div className="space-y-3">
-        <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          Audio de la escena
-        </h3>
-        <Field label="URL de audio (voz en off / música)">
-          <Input
-            value={scene.audioUrl ?? ""}
-            placeholder="https://…"
-            onChange={(e) =>
-              onChangeScene({ audioUrl: e.target.value || undefined })
-            }
-          />
-        </Field>
-        {scene.audioUrl && (
-          <>
-            <audio
-              key={scene.audioUrl}
-              src={scene.audioUrl}
-              controls
-              className="h-8 w-full"
-            />
-            <Field
-              label={`Volumen — ${Math.round((scene.audioVolume ?? 1) * 100)}%`}
-            >
-              <Slider
-                value={[scene.audioVolume ?? 1]}
-                min={0}
-                max={1}
-                step={0.05}
-                onValueChange={([v]) => onChangeScene({ audioVolume: v })}
-              />
-            </Field>
-          </>
-        )}
-        </div>
       </div>
     </div>
   );

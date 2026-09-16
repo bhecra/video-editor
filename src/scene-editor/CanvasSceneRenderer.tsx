@@ -9,7 +9,12 @@ import {
 import type { ReactNode } from "react";
 import type { CanvasLayer, CanvasScene } from "./scene-schema";
 import { interFont, monoFont, openSansFont } from "./fonts";
-import { backgroundStyle, isDarkBackground, textStyles } from "./canvas-styles";
+import {
+  backgroundStyle,
+  isDarkBackground,
+  shapeFillColor,
+  textStyles,
+} from "./canvas-styles";
 
 const LayerBox: React.FC<{
   layer: CanvasLayer;
@@ -64,6 +69,7 @@ const LayerContent: React.FC<{
           data-field="text"
           style={{
             ...textStyles(layer.variant, onDark),
+            ...(layer.color ? { color: layer.color } : {}),
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
@@ -95,14 +101,8 @@ const LayerContent: React.FC<{
             height: "100%",
             borderRadius: 24,
             backgroundColor:
-              layer.fill === "accent"
-                ? scene.accentColor
-                : layer.fill === "dark"
-                  ? "#04101f"
-                  : layer.fill === "tint"
-                    ? "#cadeff"
-                    : "#ffffff",
-            opacity: layer.fill === "white" ? 0.9 : 1,
+              layer.color ?? shapeFillColor(layer.fill, scene.accentColor),
+            opacity: !layer.color && layer.fill === "white" ? 0.9 : 1,
           }}
         />
       );

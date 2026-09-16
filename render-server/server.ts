@@ -1,3 +1,4 @@
+import fs from "fs";
 import path from "path";
 import express from "express";
 import cors from "cors";
@@ -22,14 +23,35 @@ type RenderJob = {
 };
 
 const jobs = new Map<string, RenderJob>();
-let cachedBundleLocation: string | null = null;
+
+const newestSourceMtime = (dir: string): number => {
+  let newest = 0;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    newest = Math.max(
+      newest,
+      entry.isDirectory()
+        ? newestSourceMtime(full)
+        : fs.statSync(full).mtimeMs,
+    );
+  }
+  return newest;
+};
+
+// Caching the bundle for the life of the process means edits to src/ never
+// reach a render until the server restarts — renders silently come out stale.
+// Keyed on the newest source mtime instead: fast repeat renders, never stale.
+let cachedBundle: { location: string; mtime: number } | null = null;
 
 const getBundle = async () => {
-  if (cachedBundleLocation) return cachedBundleLocation;
-  cachedBundleLocation = await bundle({
+  const mtime = newestSourceMtime(path.join(PROJECT_ROOT, "src"));
+  if (cachedBundle?.mtime === mtime) return cachedBundle.location;
+
+  const location = await bundle({
     entryPoint: path.join(PROJECT_ROOT, "src", "index.ts"),
   });
-  return cachedBundleLocation;
+  cachedBundle = { location, mtime };
+  return location;
 };
 
 const runRender = async (job: RenderJob, inputProps: DynamicVideoProps) => {

@@ -1,16 +1,19 @@
 import type { DynamicVideoProps } from "./scene-schema";
 
 export const sampleOnboardingVideo: DynamicVideoProps = {
+  settings: { subtitles: false },
   scenes: [
     {
       id: "s1",
+      script:
+        "Bienvenido al equipo comercial. En los próximos treinta días vas a pasar de conocer la empresa a cerrar tus primeras oportunidades con autonomía.",
       name: "Bienvenido al equipo comercial",
       type: "canvas",
       layout: "portada",
       durationInSeconds: 8,
       accentColor: "#1a6bff",
       background: "gradient",
-      audioUrl: "https://remotion.media/audio.mp3",
+      audioUrl: "https://remotion.media/illuminati-confirmed.wav",
       audioVolume: 1,
       layers: [
         {
@@ -76,6 +79,8 @@ export const sampleOnboardingVideo: DynamicVideoProps = {
     },
     {
       id: "s2",
+      script:
+        "Este onboarding tiene cuatro semanas, y cada una tiene un objetivo claro.",
       name: "Este onboarding tiene cuatro semanas",
       type: "canvas",
       layout: "agenda-indice",
@@ -112,6 +117,8 @@ export const sampleOnboardingVideo: DynamicVideoProps = {
     },
     {
       id: "s3",
+      script:
+        "La semana uno es de contexto: entender qué vendemos y a quién.",
       name: "La semana uno es de contexto",
       type: "canvas",
       layout: "divisor-seccion",
@@ -133,6 +140,8 @@ export const sampleOnboardingVideo: DynamicVideoProps = {
     },
     {
       id: "s4",
+      script:
+        "Empieza por el producto. Conócelo a fondo antes de hablar con un cliente.",
       name: "Empieza por el producto",
       type: "canvas",
       layout: "texto-imagen",
@@ -173,14 +182,18 @@ export const sampleOnboardingVideo: DynamicVideoProps = {
     },
     {
       id: "s5",
+      script:
+        "Revisa los casos de éxito para ver cómo se ve una venta bien hecha.",
       name: "Revisa los casos de éxito",
       type: "avatar",
-      durationInSeconds: 7,
-      videoUrl: "https://remotion.media/video.mp4",
+      durationInSeconds: 5,
+      videoUrl: "https://remotion.media/first-frame-at-4sec.webm",
       caption: "Revisa los casos de éxito",
     },
     {
       id: "s6",
+      script:
+        "Conoce el mercado: hoy tenemos más de ciento veinte clientes activos en tu territorio.",
       name: "Conoce el mercado",
       type: "canvas",
       layout: "dato-clave",
@@ -202,6 +215,8 @@ export const sampleOnboardingVideo: DynamicVideoProps = {
     },
     {
       id: "s7",
+      script:
+        "Configura tus herramientas antes de arrancar la semana dos.",
       name: "Configura tus herramientas",
       type: "canvas",
       layout: "lista-ordenada",
@@ -238,6 +253,8 @@ export const sampleOnboardingVideo: DynamicVideoProps = {
     },
     {
       id: "s8",
+      script:
+        "Aprende la disciplina del CRM desde el primer día.",
       name: "Aprende la disciplina del CRM",
       type: "canvas",
       layout: "cita",
@@ -259,14 +276,18 @@ export const sampleOnboardingVideo: DynamicVideoProps = {
     },
     {
       id: "s9",
+      script:
+        "Cierra la semana uno con una prueba corta para validar lo aprendido.",
       name: "Cierra la semana uno con una prueba",
       type: "video",
-      durationInSeconds: 7,
-      videoUrl: "https://remotion.media/video.mp4",
+      durationInSeconds: 5,
+      videoUrl: "https://remotion.media/first-frame-at-4sec.webm",
       caption: "Cierra la semana uno con una prueba corta",
     },
     {
       id: "s10",
+      script:
+        "La semana dos es de discurso: ahora que conoces el producto, toca contar la historia.",
       name: "La semana dos es de discurso",
       type: "canvas",
       layout: "afirmacion",

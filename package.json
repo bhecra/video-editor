@@ -44,7 +44,7 @@
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc",
     "demo": "cd editor-demo && vite",
-    "render-server": "tsx render-server/server.ts"
+    "render-server": "tsx watch render-server/server.ts"
   },
   "sideEffects": [
     "*.css"

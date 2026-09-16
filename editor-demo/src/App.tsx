@@ -2,23 +2,37 @@ import { useCallback, useMemo, useState } from "react";
 import { Player, Thumbnail } from "@remotion/player";
 import { DynamicVideo } from "../../src/scene-editor/DynamicVideo";
 import { sampleOnboardingVideo } from "../../src/scene-editor/sample-data";
-import type {
-  CanvasLayer,
-  CanvasScene,
-  Scene,
+import {
+  defaultVideoSettings,
+  type CanvasLayer,
+  type CanvasScene,
+  type LogoSettings,
+  type Scene,
+  type VideoSettings,
 } from "../../src/scene-editor/scene-schema";
 import {
   canvasTemplates,
   createLayersForLayout,
 } from "../../src/scene-editor/canvas-templates";
+import { Copy, MoreVertical, Plus, Trash2 } from "lucide-react";
 import { formatDuration, typeBadgeVariant, typeLabels } from "./lib/scene-meta";
 import { PropertiesPanel } from "./components/PropertiesPanel";
 import { CanvasLayerOverlay } from "./components/CanvasLayerOverlay";
+import { SceneAudioPanel } from "./components/SceneAudioPanel";
+import { VideoSettingsDialog } from "./components/VideoSettingsDialog";
+import { LogoOverlay } from "./components/LogoOverlay";
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
 import { Card } from "./components/ui/card";
 import { Alert, AlertDescription } from "./components/ui/alert";
 import { ScrollArea } from "./components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "./components/ui/toggle-group";
 import { TooltipProvider } from "./components/ui/tooltip";
@@ -73,6 +87,65 @@ const newLayer = (type: CanvasLayer["type"]): CanvasLayer => {
   }
 };
 
+const DEFAULT_CLIP = "https://remotion.media/first-frame-at-4sec.webm";
+
+const newScene = (type: Scene["type"]): Scene => {
+  const id = `scene-${Date.now()}`;
+  switch (type) {
+    case "canvas":
+      return {
+        id,
+        name: "Nueva escena",
+        type: "canvas",
+        layout: "una-columna",
+        durationInSeconds: 6,
+        accentColor: "#1a6bff",
+        background: canvasTemplates["una-columna"].background,
+        layers: createLayersForLayout("una-columna"),
+      };
+    case "imagen":
+      return {
+        id,
+        name: "Nueva imagen",
+        type: "imagen",
+        durationInSeconds: 5,
+        imageUrl: "https://picsum.photos/seed/nueva-escena/1920/1080",
+      };
+    case "video":
+      return {
+        id,
+        name: "Nuevo video",
+        type: "video",
+        durationInSeconds: 5,
+        videoUrl: DEFAULT_CLIP,
+      };
+    case "avatar":
+      return {
+        id,
+        name: "Nuevo avatar",
+        type: "avatar",
+        durationInSeconds: 5,
+        videoUrl: DEFAULT_CLIP,
+      };
+  }
+};
+
+// Layer ids have to be regenerated so the copy can be selected independently.
+const duplicateScene = (scene: Scene): Scene => {
+  const suffix = Math.random().toString(36).slice(2, 7);
+  const copy = {
+    ...scene,
+    id: `${scene.id}-copy-${suffix}`,
+    name: `${scene.name} (copia)`,
+  };
+  return copy.type === "canvas"
+    ? {
+        ...copy,
+        layers: copy.layers.map((l) => ({ ...l, id: `${l.id}-${suffix}` })),
+      }
+    : copy;
+};
+
 export const App: React.FC = () => {
   const [scenes, setScenes] = useState<Scene[]>(sampleOnboardingVideo.scenes);
   const [selectedSceneId, setSelectedSceneId] = useState(scenes[0].id);
@@ -83,11 +156,18 @@ export const App: React.FC = () => {
   const [previewScope, setPreviewScope] = useState<"escena" | "completo">(
     "escena",
   );
+  const [settings, setSettings] = useState<VideoSettings>(
+    sampleOnboardingVideo.settings ?? defaultVideoSettings,
+  );
   const [renderState, setRenderState] = useState<RenderState>({
     status: "idle",
   });
 
-  const selectedScene = scenes.find((s) => s.id === selectedSceneId)!;
+  const patchSettings = (patch: Partial<VideoSettings>) =>
+    setSettings((prev) => ({ ...prev, ...patch }));
+
+  const selectedScene =
+    scenes.find((s) => s.id === selectedSceneId) ?? scenes[0];
 
   const totalSeconds = scenes.reduce((sum, s) => sum + s.durationInSeconds, 0);
 
@@ -103,6 +183,36 @@ export const App: React.FC = () => {
   const handleSelectScene = (scene: Scene) => {
     setSelectedSceneId(scene.id);
     setSelectedLayerId(null);
+  };
+
+  const insertAfterSelected = (scene: Scene) => {
+    setScenes((prev) => {
+      const at = prev.findIndex((s) => s.id === selectedSceneId);
+      const next = [...prev];
+      next.splice(at + 1, 0, scene);
+      return next;
+    });
+    setSelectedSceneId(scene.id);
+    setSelectedLayerId(null);
+    setActiveTab("editar");
+  };
+
+  const handleAddScene = (type: Scene["type"]) => insertAfterSelected(newScene(type));
+
+  const handleDuplicateScene = (scene: Scene) =>
+    insertAfterSelected(duplicateScene(scene));
+
+  const handleDeleteScene = (id: string) => {
+    if (scenes.length === 1) return;
+    const at = scenes.findIndex((s) => s.id === id);
+    const next = scenes.filter((s) => s.id !== id);
+    // Both updates have to be siblings: nesting setSelectedSceneId inside the
+    // setScenes updater lets React drop it, leaving the selection dangling.
+    setScenes(next);
+    if (id === selectedSceneId) {
+      setSelectedSceneId(next[Math.min(at, next.length - 1)].id);
+      setSelectedLayerId(null);
+    }
   };
 
   const patchScene = useCallback(
@@ -193,7 +303,7 @@ export const App: React.FC = () => {
       const startRes = await fetch(`${RENDER_SERVER_URL}/api/render`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scenes }),
+        body: JSON.stringify({ scenes, settings }),
       });
       if (!startRes.ok) {
         throw new Error(`El servidor de render respondió ${startRes.status}`);
@@ -252,6 +362,7 @@ export const App: React.FC = () => {
               </AlertDescription>
             </Alert>
           )}
+          <VideoSettingsDialog settings={settings} onChange={patchSettings} />
           <Button
             onClick={handleGenerate}
             disabled={renderState.status === "rendering"}
@@ -275,16 +386,18 @@ export const App: React.FC = () => {
               {formatDuration(totalSeconds)} min en total
             </span>
           </div>
-          <ScrollArea className="flex-1 p-2">
+          <ScrollArea className="min-h-0 flex-1 p-2">
             <div className="flex flex-col gap-1">
               {scenes.map((scene, index) => {
                 const isSelected = scene.id === selectedSceneId;
                 return (
-                  <button
+                  <div
                     key={scene.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleSelectScene(scene)}
                     className={cn(
-                      "rounded-lg border-l-2 px-3 py-2 text-left transition-colors",
+                      "group cursor-pointer rounded-lg border-l-2 px-3 py-2 text-left transition-colors",
                       isSelected
                         ? "border-l-primary bg-primary/5"
                         : "border-l-transparent hover:bg-muted",
@@ -294,19 +407,68 @@ export const App: React.FC = () => {
                       <span className="text-[11px] font-semibold text-muted-foreground">
                         ESCENA {index + 1}
                       </span>
-                      <Badge variant={typeBadgeVariant[scene.type]}>
-                        {typeLabels[scene.type]}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Badge variant={typeBadgeVariant[scene.type]}>
+                          {typeLabels[scene.type]}
+                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="icon-xs"
+                              variant="ghost"
+                              aria-label="Opciones de escena"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreVertical />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => handleDuplicateScene(scene)}
+                            >
+                              <Copy />
+                              Duplicar
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              variant="destructive"
+                              disabled={scenes.length === 1}
+                              onClick={() => handleDeleteScene(scene.id)}
+                            >
+                              <Trash2 />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                     <div className="text-sm font-semibold">{scene.name}</div>
                     <div className="font-mono text-xs text-muted-foreground">
                       0:{scene.durationInSeconds.toString().padStart(2, "0")}
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
           </ScrollArea>
+
+          <div className="border-t p-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <Plus />
+                  Añadir escena
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width)">
+                {(["canvas", "imagen", "video", "avatar"] as const).map((t) => (
+                  <DropdownMenuItem key={t} onClick={() => handleAddScene(t)}>
+                    {typeLabels[t]}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </Card>
 
         <Card className="flex flex-1 flex-col gap-0 overflow-hidden py-0 shadow-sm">
@@ -343,7 +505,7 @@ export const App: React.FC = () => {
               <div className="relative overflow-hidden rounded-xl ring-1 ring-foreground/10">
                 <Thumbnail
                   component={DynamicVideo}
-                  inputProps={{ scenes: [selectedScene] }}
+                  inputProps={{ scenes: [selectedScene], settings }}
                   frameToDisplay={settledFrame(selectedScene)}
                   durationInFrames={Math.round(
                     selectedScene.durationInSeconds * FPS,
@@ -353,6 +515,12 @@ export const App: React.FC = () => {
                   fps={FPS}
                   style={{ width: "100%" }}
                 />
+                {settings.logo && (
+                  <LogoOverlay
+                    logo={settings.logo}
+                    onChange={(logo: LogoSettings) => patchSettings({ logo })}
+                  />
+                )}
                 {selectedScene.type === "canvas" && (
                   <CanvasLayerOverlay
                     scene={selectedScene}
@@ -369,9 +537,9 @@ export const App: React.FC = () => {
             <TabsContent value="preview">
               <div className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
                 <Player
-                  key={previewScope + selectedScene.id}
+                  key={previewScope + selectedScene.id + String(settings.subtitles)}
                   component={DynamicVideo}
-                  inputProps={{ scenes: previewScenes }}
+                  inputProps={{ scenes: previewScenes, settings }}
                   durationInFrames={Math.round(previewSeconds * FPS)}
                   compositionWidth={1920}
                   compositionHeight={1080}
@@ -421,6 +589,11 @@ export const App: React.FC = () => {
                 </ToggleGroup>
               )}
             </div>
+
+            <SceneAudioPanel
+              scene={selectedScene}
+              onChangeScene={handleChangeScene}
+            />
           </Tabs>
         </Card>
 

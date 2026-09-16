@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { CanvasBackground, TextLayer } from "./scene-schema";
+import type { CanvasBackground, ShapeLayer, TextLayer } from "./scene-schema";
 import { interFont, openSansFont } from "./fonts";
 
 export const backgroundStyle = (
@@ -90,3 +90,20 @@ export const scaleTextStyles = (
       ? style.letterSpacing * scale
       : style.letterSpacing,
 });
+
+export const shapeFillColor = (
+  fill: ShapeLayer["fill"],
+  accentColor: string,
+): string => {
+  switch (fill) {
+    case "accent":
+      return accentColor;
+    case "dark":
+      return "#04101f";
+    case "tint":
+      return "#cadeff";
+    case "white":
+    default:
+      return "#ffffff";
+  }
+};

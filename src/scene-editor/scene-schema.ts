@@ -7,6 +7,8 @@ const baseSceneFields = {
   durationInSeconds: z.number().min(1),
   audioUrl: z.string().optional(),
   audioVolume: z.number().min(0).max(1).optional(),
+  // Narration text. Shown as a subtitle when the setting is on.
+  script: z.string().optional(),
 };
 
 export const canvasLayouts = [
@@ -47,6 +49,8 @@ export const TextLayerSchema = z.object({
   type: z.literal("text"),
   text: z.string(),
   variant: z.enum(textVariants),
+  // Overrides the colour the variant would pick for this background.
+  color: zColor().optional(),
 });
 
 export const ImageLayerSchema = z.object({
@@ -55,10 +59,14 @@ export const ImageLayerSchema = z.object({
   src: z.string(),
 });
 
+export const shapeFills = ["accent", "white", "dark", "tint"] as const;
+
 export const ShapeLayerSchema = z.object({
   ...layerBox,
   type: z.literal("shape"),
-  fill: z.enum(["accent", "white", "dark", "tint"]),
+  fill: z.enum(shapeFills),
+  // Overrides the preset fill with an explicit colour.
+  color: zColor().optional(),
 });
 
 export const BadgeLayerSchema = z.object({
@@ -139,10 +147,28 @@ export const SceneSchema = z.discriminatedUnion("type", [
   ImageSceneSchema,
 ]);
 
-export const DynamicVideoSchema = z.object({
-  scenes: z.array(SceneSchema),
+// Placed in % of the canvas, so it survives any output resolution.
+export const LogoSettingsSchema = z.object({
+  src: z.string(),
+  x: z.number(),
+  y: z.number(),
+  w: z.number(),
 });
 
+export const VideoSettingsSchema = z.object({
+  subtitles: z.boolean(),
+  logo: LogoSettingsSchema.optional(),
+});
+
+export const defaultVideoSettings: VideoSettings = { subtitles: false };
+
+export const DynamicVideoSchema = z.object({
+  scenes: z.array(SceneSchema),
+  settings: VideoSettingsSchema.optional(),
+});
+
+export type LogoSettings = z.infer<typeof LogoSettingsSchema>;
+export type VideoSettings = z.infer<typeof VideoSettingsSchema>;
 export type CanvasLayer = z.infer<typeof CanvasLayerSchema>;
 export type TextLayer = z.infer<typeof TextLayerSchema>;
 export type ImageLayer = z.infer<typeof ImageLayerSchema>;
