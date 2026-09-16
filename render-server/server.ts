@@ -14,7 +14,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use("/out", express.static(OUT_DIR));
 app.use("/uploads", express.static(UPLOADS_DIR));
 
-// API consumed by editor-demo/src/editor/api.
+// API consumed by editor/src/editor/api.
 app.use("/api", uploadRouter);
 app.use("/api", renderRouter);
 

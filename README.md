@@ -20,19 +20,60 @@ Otros comandos: `npm run studio` abre Remotion Studio sobre la misma
 composición, `npm run lint` corre ESLint y los dos `tsc`, `npm run build`
 genera el bundle de Remotion.
 
-## Estructura
+## Arquitectura
 
 Tres piezas, cada una con una responsabilidad:
 
 ```
-src/                      MOTOR DE VIDEO — lo que se renderiza (Remotion)
-editor-demo/              EDITOR — la interfaz (React + Vite)
-render-server/            API DE RENDER — genera el .mp4 (Express)
+src/              MOTOR DE VIDEO — lo que se renderiza (Remotion)
+editor/           EDITOR — la interfaz (React + Vite)
+render-server/    API DE RENDER — genera el .mp4 (Express)
 ```
 
-El contrato entre las tres es `src/video/schema/scene-schema.ts`: el editor
-produce ese objeto, el motor lo pinta y el servidor lo valida antes de
-renderizar.
+### El flujo
+
+```
+  cualquier cliente  ──►  { scenes, settings }  ──►  POST /api/render  ──►  .mp4
+      (editor/)             (src/video/schema)        (render-server)       (out/)
+```
+
+El editor no es un requisito: lo único que hace falta para generar un video es
+un JSON válido según el schema. Otra app, un backend, un CLI o un LLM que
+produzca ese objeto sirve igual.
+
+### Las dependencias
+
+```
+        editor/                                    render-server/
+    la interfaz (React)                            la API (Express)
+        │      │                                     │        │
+        │      └────────  POST /api/render  ─────────┘        │
+        │                                                     │
+        │ importa                                     importa │
+        ▼                                                     ▼
+  ┌───────────────────────────────────────────────────────────────┐
+  │                          src/video/                           │
+  │                                                               │
+  │   schema/      el contrato — lo comparten los dos             │
+  │   renderers/   cómo se pinta cada escena                      │
+  │   theme/       estilos, layouts y fuentes                     │
+  │   DynamicVideo la composición que ensambla todo               │
+  └───────────────────────────────────────────────────────────────┘
+```
+
+Las flechas van en un solo sentido: `src/video/` no sabe que existe un editor
+ni un servidor. Cada uno importa lo que necesita de él:
+
+| Quién | Qué importa | Para qué |
+|---|---|---|
+| `editor/` | `schema/` | tipar y construir las escenas |
+| `editor/` | `DynamicVideo` + `theme/` | pintar la vista previa en el navegador |
+| `render-server/` | `schema/` | validar el payload antes de renderizar |
+| `render-server/` | `src/index.ts` (bundle) | renderizar el video de verdad |
+
+Un cliente sin vista previa solo necesita la primera fila: el schema.
+
+## Estructura
 
 ### `src/` — motor de video
 
@@ -61,12 +102,12 @@ Hay una sola composición registrada, `SceneEditor`. El editor y el servidor le
 pasan las escenas como `inputProps`, así que lo que se ve en la vista previa es
 exactamente lo que sale renderizado.
 
-### `editor-demo/` — el editor
+### `editor/` — el editor
 
 Separado por capas: la page compone tres secciones y una capa de API.
 
 ```
-editor-demo/src/
+editor/src/
 ├── App.tsx                         monta EditorPage
 ├── editor/
 │   ├── EditorPage.tsx              LA PAGE: estado raíz + layout de 3 columnas
@@ -107,7 +148,7 @@ Nada fuera de `editor/api/` habla con el servidor de render, y nada fuera de
 `editor/state/` modifica las escenas: las secciones reciben props y emiten
 callbacks.
 
-Los alias evitan rutas relativas largas: `@/` apunta a `editor-demo/src` y
+Los alias evitan rutas relativas largas: `@/` apunta a `editor/src` y
 `@video/` a `src/video`.
 
 ### `render-server/` — API de render

@@ -39,11 +39,11 @@
     "vite": "7.3.6"
   },
   "scripts": {
-    "dev": "cd editor-demo && vite",
+    "dev": "cd editor && vite",
     "render-server": "tsx watch render-server/server.ts",
     "studio": "remotion studio",
     "build": "remotion bundle",
-    "lint": "eslint src && tsc && tsc -p editor-demo",
+    "lint": "eslint src && tsc && tsc -p editor",
     "upgrade": "remotion upgrade"
   },
   "sideEffects": [

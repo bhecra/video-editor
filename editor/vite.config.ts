@@ -13,7 +13,7 @@ export default defineConfig({
       "@video": path.resolve(__dirname, "../src/video"),
       // Force a single React instance: the root project's copy.
       // Without this, npm installs a second react/react-dom inside
-      // editor-demo/node_modules (as a peer dep of radix-ui), which
+      // editor/node_modules (as a peer dep of radix-ui), which
       // causes "Invalid hook call" errors.
       react: path.resolve(__dirname, "../node_modules/react"),
       "react-dom": path.resolve(__dirname, "../node_modules/react-dom"),
