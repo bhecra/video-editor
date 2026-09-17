@@ -7,7 +7,13 @@ import type {
 } from "@video/schema/scene-schema";
 import { formatDuration, typeLabels } from "@/lib/scene-meta";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
@@ -48,12 +54,16 @@ export const ScenesPanel: React.FC<Props> = ({
   onChangeTransition,
 }) => (
   <Card className="flex w-80 flex-col gap-0 py-0 shadow-sm">
-    <div className="flex items-baseline gap-2 border-b px-4 py-3">
-      <h2 className="text-sm font-semibold">Escenas ({scenes.length})</h2>
-      <span className="text-xs text-muted-foreground">
-        {formatDuration(totalSeconds)} min en total
-      </span>
-    </div>
+    <CardHeader className="border-b py-3">
+      <div className="flex items-baseline gap-2">
+        <CardTitle className="text-sm font-semibold">
+          Escenas ({scenes.length})
+        </CardTitle>
+        <CardDescription>
+          {formatDuration(totalSeconds)} min en total
+        </CardDescription>
+      </div>
+    </CardHeader>
 
     <ScrollArea className="min-h-0 flex-1 p-2">
       <div className="flex flex-col gap-1">
@@ -84,7 +94,7 @@ export const ScenesPanel: React.FC<Props> = ({
       </div>
     </ScrollArea>
 
-    <div className="border-t p-2">
+    <CardFooter className="p-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="w-full">
@@ -103,6 +113,6 @@ export const ScenesPanel: React.FC<Props> = ({
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
+    </CardFooter>
   </Card>
 );

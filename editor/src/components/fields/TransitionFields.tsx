@@ -12,7 +12,7 @@ import {
   transitionIcons,
   transitionLabels,
 } from "@/lib/scene-meta";
-import { Label } from "@/components/ui/label";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -37,9 +37,9 @@ export const TransitionFields: React.FC<Props> = ({ transition, onChange }) => {
   const hasDirection = directionalTransitions.includes(transition.type);
 
   return (
-    <div className="space-y-3">
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">Efecto</Label>
+    <FieldGroup className="gap-3">
+      <Field>
+        <FieldLabel className="text-xs text-muted-foreground">Efecto</FieldLabel>
         <Select
           value={transition.type}
           onValueChange={(type) =>
@@ -64,13 +64,13 @@ export const TransitionFields: React.FC<Props> = ({ transition, onChange }) => {
             })}
           </SelectContent>
         </Select>
-      </div>
+      </Field>
 
       {transition.type !== "none" && (
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">
+        <Field>
+          <FieldLabel className="text-xs text-muted-foreground">
             Duración — {formatTransitionDuration(transition.durationInSeconds)}
-          </Label>
+          </FieldLabel>
           <Slider
             value={[transition.durationInSeconds]}
             min={0.1}
@@ -83,12 +83,12 @@ export const TransitionFields: React.FC<Props> = ({ transition, onChange }) => {
               })
             }
           />
-        </div>
+        </Field>
       )}
 
       {hasDirection && (
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Desde</Label>
+        <Field>
+          <FieldLabel className="text-xs text-muted-foreground">Desde</FieldLabel>
           <ToggleGroup
             type="single"
             size="sm"
@@ -113,8 +113,8 @@ export const TransitionFields: React.FC<Props> = ({ transition, onChange }) => {
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-        </div>
+        </Field>
       )}
-    </div>
+    </FieldGroup>
   );
 };

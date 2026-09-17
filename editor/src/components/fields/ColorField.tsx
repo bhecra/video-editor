@@ -1,7 +1,11 @@
 import { RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Props = {
@@ -23,36 +27,39 @@ export const ColorField: React.FC<Props> = ({
   const shown = value ?? fallback;
 
   return (
-    <div className="space-y-1.5">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
-      <div className="flex items-center gap-2">
-        <input
-          type="color"
+    <Field>
+      <FieldLabel className="text-xs text-muted-foreground">{label}</FieldLabel>
+      <InputGroup>
+        <InputGroupAddon>
+          <input
+            type="color"
+            value={shown}
+            onChange={(e) => onChange(e.target.value)}
+            aria-label={label}
+            className="h-5 w-7 cursor-pointer rounded-sm border border-input bg-transparent p-0"
+          />
+        </InputGroupAddon>
+        <InputGroupInput
           value={shown}
           onChange={(e) => onChange(e.target.value)}
-          className="h-8 w-10 cursor-pointer rounded-md border border-input bg-transparent p-0.5"
-        />
-        <Input
-          value={shown}
-          onChange={(e) => onChange(e.target.value)}
-          className="flex-1"
         />
         {onReset && value && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                onClick={onReset}
-                aria-label="Restablecer color"
-              >
-                <RotateCcw />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Volver al color por defecto</TooltipContent>
-          </Tooltip>
+          <InputGroupAddon align="inline-end">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <InputGroupButton
+                  size="icon-xs"
+                  aria-label="Restablecer color"
+                  onClick={onReset}
+                >
+                  <RotateCcw />
+                </InputGroupButton>
+              </TooltipTrigger>
+              <TooltipContent>Volver al color por defecto</TooltipContent>
+            </Tooltip>
+          </InputGroupAddon>
         )}
-      </div>
-    </div>
+      </InputGroup>
+    </Field>
   );
 };

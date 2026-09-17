@@ -27,6 +27,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -149,7 +157,7 @@ export const LayersList: React.FC<Props> = ({
         </span>
       </div>
 
-      <div ref={listRef} className="flex flex-col gap-0.5">
+      <ItemGroup ref={listRef} className="gap-0.5">
         {displayed.map((layer, displayIndex) => {
           const Icon = layerIcons[layer.type];
           const isSelected = layer.id === selectedLayerId;
@@ -157,14 +165,14 @@ export const LayersList: React.FC<Props> = ({
           const preview = layerPreview(layer);
 
           return (
-            <div
+            <Item
               key={layer.id}
+              size="xs"
+              variant={isSelected ? "muted" : "default"}
               onClick={() => onSelectLayer(layer.id)}
               className={cn(
-                "group flex items-center gap-1 rounded-md border px-1.5 py-1.5 text-xs transition-colors",
-                isSelected
-                  ? "border-primary bg-primary/5"
-                  : "border-transparent hover:bg-muted",
+                "cursor-pointer py-1.5",
+                isSelected && "border-primary bg-primary/5",
                 draggingId === layer.id && "opacity-40",
                 draggingId &&
                   draggingId !== layer.id &&
@@ -172,22 +180,27 @@ export const LayersList: React.FC<Props> = ({
                   "border-primary border-dashed",
               )}
             >
-              <GripVertical
-                onPointerDown={startReorder(layer.id)}
-                className="size-3.5 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing"
-              />
-              <Icon className="size-3.5 shrink-0 text-muted-foreground" />
-              <button className="flex-1 truncate text-left">
-                <span className="font-medium">
+              <ItemMedia>
+                <GripVertical
+                  onPointerDown={startReorder(layer.id)}
+                  className="size-3.5 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing"
+                />
+              </ItemMedia>
+              <ItemMedia variant="icon">
+                <Icon className="text-muted-foreground" />
+              </ItemMedia>
+              <ItemContent className="min-w-0">
+                <ItemTitle className="max-w-full truncate text-xs">
                   {layerTypeLabels[layer.type]}
-                </span>
-                {preview && (
-                  <span className="ml-1 font-normal text-muted-foreground">
-                    · {preview}
-                  </span>
-                )}
-              </button>
+                  {preview && (
+                    <span className="ml-1 font-normal text-muted-foreground">
+                      · {preview}
+                    </span>
+                  )}
+                </ItemTitle>
+              </ItemContent>
 
+              <ItemActions>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -238,10 +251,11 @@ export const LayersList: React.FC<Props> = ({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
+              </ItemActions>
+            </Item>
           );
         })}
-      </div>
+      </ItemGroup>
 
       <Separator />
 

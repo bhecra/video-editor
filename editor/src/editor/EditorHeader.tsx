@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import type { VideoSettings } from "@video/schema/scene-schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Link } from "@/router/Link";
 import { GALLERY_PATH } from "@/router/routes";
 import type { RenderState } from "./api/useRenderJob";
@@ -39,9 +40,12 @@ export const EditorHeader: React.FC<Props> = ({
     </div>
     <div className="flex items-center gap-4">
       {renderState.status === "rendering" && (
-        <span className="font-mono text-xs text-muted-foreground">
-          Renderizando… {Math.round(renderState.progress * 100)}%
-        </span>
+        <div className="flex w-44 flex-col gap-1">
+          <span className="font-mono text-xs text-muted-foreground">
+            Renderizando… {Math.round(renderState.progress * 100)}%
+          </span>
+          <Progress value={renderState.progress * 100} />
+        </div>
       )}
       {renderState.status === "error" && (
         <Alert variant="destructive" className="max-w-sm py-2">

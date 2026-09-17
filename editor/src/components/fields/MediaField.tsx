@@ -1,8 +1,18 @@
 import { useRef, useState } from "react";
-import { ImageIcon, Loader2, Upload, Video as VideoIcon } from "lucide-react";
+import { ImageIcon, Upload, Video as VideoIcon } from "lucide-react";
 import { uploadMedia } from "@/editor/api/upload-api";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
 
 type Props = {
   kind: "image" | "video";
@@ -58,10 +68,10 @@ export const MediaField: React.FC<Props> = ({
   };
 
   return (
-    <div className="space-y-2">
-      <Label className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+    <Field data-invalid={Boolean(error)}>
+      <FieldLabel className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
         {label}
-      </Label>
+      </FieldLabel>
 
       <input
         ref={inputRef}
@@ -87,38 +97,48 @@ export const MediaField: React.FC<Props> = ({
             )}
           </div>
           <Button variant="outline" onClick={pick} disabled={uploading}>
-            {uploading ? <Loader2 className="animate-spin" /> : <Upload />}
+            {uploading ? <Spinner /> : <Upload />}
             {uploading ? "Subiendo…" : "Reemplazar"}
           </Button>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={pick}
-          disabled={uploading}
-          className="flex w-full flex-col items-center gap-2 rounded-lg border border-dashed p-5 text-center transition-colors hover:border-ring hover:bg-muted/50 disabled:pointer-events-none disabled:opacity-60"
+        <Empty
+          role="button"
+          tabIndex={0}
+          aria-disabled={uploading}
+          onClick={uploading ? undefined : pick}
+          onKeyDown={(e) => {
+            if (uploading) return;
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              pick();
+            }
+          }}
+          className="cursor-pointer border p-5 hover:border-ring hover:bg-muted/50 aria-disabled:pointer-events-none aria-disabled:opacity-60"
         >
-          {uploading ? (
-            <Loader2 className="size-5 animate-spin text-muted-foreground" />
-          ) : (
-            <Icon className="size-5 text-muted-foreground" />
-          )}
-          <span className="text-xs text-muted-foreground">
-            {uploading ? "Subiendo…" : text.empty}
-          </span>
-          {/* A span, not a Button: it lives inside the clickable area, so it
-              only has to look like the design system's outline button. */}
-          <span className={buttonVariants({ variant: "outline" })}>
-            <Upload />
-            {text.action}
-          </span>
-          <span className="text-[0.7rem] text-muted-foreground">
-            {text.hint}
-          </span>
-        </button>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              {uploading ? <Spinner /> : <Icon />}
+            </EmptyMedia>
+            <EmptyTitle className="text-xs font-normal text-muted-foreground">
+              {uploading ? "Subiendo…" : text.empty}
+            </EmptyTitle>
+            <EmptyDescription>{text.hint}</EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button variant="outline" disabled={uploading} tabIndex={-1}>
+              <Upload />
+              {text.action}
+            </Button>
+          </EmptyContent>
+        </Empty>
       )}
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
-    </div>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+    </Field>
   );
 };

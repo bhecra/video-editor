@@ -14,6 +14,7 @@ import type {
 } from "@video/schema/scene-schema";
 import { InlineFieldEditor } from "./InlineFieldEditor";
 import { setLayerField } from "@video/schema/layer-fields";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   ContextMenu,
@@ -255,8 +256,9 @@ export const CanvasLayerOverlay: React.FC<Props> = ({
                     {layer.type === "image" && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <button
+                          <Button
                             type="button"
+                            size="icon-xs"
                             aria-label="Reemplazar imagen"
                             // Stops the press from reaching the layer, which
                             // would start a drag instead of opening the picker.
@@ -265,10 +267,10 @@ export const CanvasLayerOverlay: React.FC<Props> = ({
                               e.stopPropagation();
                               pickImageFor(layer.id);
                             }}
-                            className="absolute -top-2.5 -right-2.5 flex size-6 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm transition-transform hover:scale-110"
+                            className="absolute -top-2.5 -right-2.5 size-6 rounded-full border-2 border-background"
                           >
                             <ImageUp className="size-3" />
-                          </button>
+                          </Button>
                         </TooltipTrigger>
                         <TooltipContent>
                           Reemplazar imagen · o doble clic

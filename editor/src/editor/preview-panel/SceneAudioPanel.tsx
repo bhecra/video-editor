@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Music, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import type { Scene } from "@video/schema/scene-schema";
 import { Button } from "@/components/ui/button";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -121,32 +121,34 @@ export const SceneAudioPanel: React.FC<Props> = ({ scene, onChangeScene }) => {
         </p>
       )}
 
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">
-          Voz en off / guion de esta escena
-        </Label>
-        <Textarea
-          value={scene.script ?? ""}
-          rows={2}
-          placeholder="Escribe el guion que se narrará en esta escena…"
-          onChange={(e) =>
-            onChangeScene({ script: e.target.value || undefined })
-          }
-        />
-      </div>
+      <FieldGroup className="gap-3">
+        <Field>
+          <FieldLabel className="text-xs text-muted-foreground">
+            Voz en off / guion de esta escena
+          </FieldLabel>
+          <Textarea
+            value={scene.script ?? ""}
+            rows={2}
+            placeholder="Escribe el guion que se narrará en esta escena…"
+            onChange={(e) =>
+              onChangeScene({ script: e.target.value || undefined })
+            }
+          />
+        </Field>
 
-      <div className="space-y-1.5">
-        <Label className="text-xs text-muted-foreground">
-          URL de audio (voz en off / música)
-        </Label>
-        <Input
-          value={scene.audioUrl ?? ""}
-          placeholder="https://…"
-          onChange={(e) =>
-            onChangeScene({ audioUrl: e.target.value || undefined })
-          }
-        />
-      </div>
+        <Field>
+          <FieldLabel className="text-xs text-muted-foreground">
+            URL de audio (voz en off / música)
+          </FieldLabel>
+          <Input
+            value={scene.audioUrl ?? ""}
+            placeholder="https://…"
+            onChange={(e) =>
+              onChangeScene({ audioUrl: e.target.value || undefined })
+            }
+          />
+        </Field>
+      </FieldGroup>
     </div>
   );
 };

@@ -22,7 +22,13 @@ import {
   Quote,
   Search,
 } from "lucide-react";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -275,29 +281,28 @@ export const LayoutPicker: React.FC<Props> = ({ value, onChange }) => {
   };
 
   return (
-    <div className="space-y-1.5">
-      <Label className="text-xs text-muted-foreground">Plantilla</Label>
+    <Field>
+      <FieldLabel className="text-xs text-muted-foreground">Plantilla</FieldLabel>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger
-          className={cn(
-            "flex w-full items-center gap-2.5 rounded-lg border border-input bg-transparent p-1.5 text-left transition-colors outline-none",
-            "hover:bg-muted/60 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:bg-muted/60",
-            "dark:bg-input/30 dark:hover:bg-input/50",
-          )}
-        >
-          <span className="h-8 w-14 shrink-0 overflow-hidden rounded-md ring-1 ring-foreground/10">
-            <LayoutThumb layout={value} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="flex items-center gap-1.5 text-sm font-medium">
-              <CurrentIcon className="size-3.5 text-muted-foreground" />
-              <span className="truncate">{canvasLayoutLabels[value]}</span>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="h-auto w-full justify-start gap-2.5 whitespace-normal p-1.5"
+          >
+            <span className="h-8 w-14 shrink-0 overflow-hidden rounded-md ring-1 ring-foreground/10">
+              <LayoutThumb layout={value} />
             </span>
-            <span className="block truncate text-xs text-muted-foreground">
-              {layoutMeta[value].hint}
+            <span className="min-w-0 flex-1 text-left">
+              <span className="flex items-center gap-1.5 text-sm font-medium">
+                <CurrentIcon className="size-3.5 text-muted-foreground" />
+                <span className="truncate">{canvasLayoutLabels[value]}</span>
+              </span>
+              <span className="block truncate text-xs font-normal text-muted-foreground">
+                {layoutMeta[value].hint}
+              </span>
             </span>
-          </span>
-          <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
+            <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
+          </Button>
         </PopoverTrigger>
 
         <PopoverContent
@@ -306,16 +311,17 @@ export const LayoutPicker: React.FC<Props> = ({ value, onChange }) => {
           className="w-(--radix-popover-trigger-width) min-w-80 p-0"
           onKeyDown={onKeyDown}
         >
-          <div className="flex items-center gap-2 border-b px-2.5 py-2">
-            <Search className="size-3.5 shrink-0 text-muted-foreground" />
-            <input
+          <InputGroup className="h-auto rounded-none border-0 border-b">
+            <InputGroupAddon>
+              <Search />
+            </InputGroupAddon>
+            <InputGroupInput
               autoFocus
               value={query}
               placeholder="Buscar plantilla…"
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
-          </div>
+          </InputGroup>
 
           <div
             ref={gridRef}
@@ -333,9 +339,10 @@ export const LayoutPicker: React.FC<Props> = ({ value, onChange }) => {
                     const selected = layout === value;
 
                     return (
-                      <button
+                      <Button
                         key={layout}
                         type="button"
+                        variant="ghost"
                         data-layout={layout}
                         role="option"
                         aria-selected={selected}
@@ -345,11 +352,10 @@ export const LayoutPicker: React.FC<Props> = ({ value, onChange }) => {
                           setOpen(false);
                         }}
                         className={cn(
-                          "group relative space-y-1.5 rounded-lg border p-1.5 text-left transition-colors outline-none",
-                          "hover:bg-muted/60 focus-visible:ring-3 focus-visible:ring-ring/50",
+                          "group relative h-auto flex-col items-stretch gap-1.5 whitespace-normal rounded-lg p-1.5 text-left",
                           selected
-                            ? "border-primary/60 bg-primary/5"
-                            : "border-transparent",
+                            ? "border border-primary/60 bg-primary/5"
+                            : "border border-transparent",
                         )}
                       >
                         <span className="block aspect-video overflow-hidden rounded-md ring-1 ring-foreground/10">
@@ -366,7 +372,7 @@ export const LayoutPicker: React.FC<Props> = ({ value, onChange }) => {
                             <Check className="size-3" />
                           </span>
                         )}
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -385,6 +391,6 @@ export const LayoutPicker: React.FC<Props> = ({ value, onChange }) => {
           </div>
         </PopoverContent>
       </Popover>
-    </div>
+    </Field>
   );
 };

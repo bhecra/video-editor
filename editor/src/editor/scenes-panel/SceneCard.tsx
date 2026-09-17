@@ -10,6 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item";
 import { cn } from "@/lib/utils";
 import { SceneThumbnail } from "./SceneThumbnail";
 
@@ -32,7 +39,9 @@ export const SceneCard: React.FC<Props> = ({
   onDuplicate,
   onDelete,
 }) => (
-  <div
+  <Item
+    variant={isSelected ? "muted" : "default"}
+    size="sm"
     role="button"
     tabIndex={0}
     aria-label={`Escena ${index + 1}: ${scene.name}`}
@@ -44,16 +53,18 @@ export const SceneCard: React.FC<Props> = ({
       }
     }}
     className={cn(
-      "group flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors",
+      "cursor-pointer py-1.5",
       isSelected ? "bg-primary/10" : "hover:bg-muted",
     )}
   >
-    <SceneThumbnail scene={scene} />
+    <ItemMedia>
+      <SceneThumbnail scene={scene} />
+    </ItemMedia>
 
-    <div className="min-w-0 flex-1">
-      <div className="line-clamp-2 text-sm leading-snug font-semibold">
+    <ItemContent className="min-w-0">
+      <ItemTitle className="line-clamp-2 text-sm leading-snug font-semibold">
         {scene.name}
-      </div>
+      </ItemTitle>
       <div className="mt-0.5 flex items-center gap-1.5">
         <span className="font-mono text-xs text-muted-foreground">
           {formatDuration(scene.durationInSeconds)}
@@ -62,35 +73,37 @@ export const SceneCard: React.FC<Props> = ({
           {typeLabels[scene.type]}
         </Badge>
       </div>
-    </div>
+    </ItemContent>
 
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          size="icon-xs"
-          variant="ghost"
-          aria-label="Opciones de escena"
-          className="shrink-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MoreVertical />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={onDuplicate}>
-          <Copy />
-          Duplicar
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          disabled={!canDelete}
-          onClick={onDelete}
-        >
-          <Trash2 />
-          Eliminar
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  </div>
+    <ItemActions>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            aria-label="Opciones de escena"
+            className="shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MoreVertical />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={onDuplicate}>
+            <Copy />
+            Duplicar
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            variant="destructive"
+            disabled={!canDelete}
+            onClick={onDelete}
+          >
+            <Trash2 />
+            Eliminar
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </ItemActions>
+  </Item>
 );

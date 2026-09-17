@@ -16,9 +16,15 @@ import {
   textStyles,
 } from "@video/theme/canvas-styles";
 import { Badge } from "@/components/ui/badge";
+import {
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -41,14 +47,14 @@ type Props = {
   onReorderLayer: (id: string, toIndex: number) => void;
 };
 
-const Field: React.FC<{ label: string; children: React.ReactNode }> = ({
+const Labeled: React.FC<{ label: string; children: React.ReactNode }> = ({
   label,
   children,
 }) => (
-  <div className="space-y-1.5">
-    <Label className="text-xs text-muted-foreground">{label}</Label>
+  <Field>
+    <FieldLabel className="text-xs text-muted-foreground">{label}</FieldLabel>
     {children}
-  </div>
+  </Field>
 );
 
 const layerTypeLabels: Record<CanvasLayer["type"], string> = {
@@ -70,7 +76,7 @@ const LayerFields: React.FC<{
     case "text":
       return (
         <>
-          <Field label="Estilo">
+          <Labeled label="Estilo">
             <Select
               value={layer.variant}
               onValueChange={(v) =>
@@ -88,14 +94,14 @@ const LayerFields: React.FC<{
                 ))}
               </SelectContent>
             </Select>
-          </Field>
-          <Field label="Contenido">
+          </Labeled>
+          <Labeled label="Contenido">
             <Textarea
               value={layer.text}
               rows={3}
               onChange={(e) => onUpdate({ text: e.target.value })}
             />
-          </Field>
+          </Labeled>
           <ColorField
             label="Color del texto"
             value={layer.color}
@@ -123,7 +129,7 @@ const LayerFields: React.FC<{
     case "shape":
       return (
         <>
-          <Field label="Relleno">
+          <Labeled label="Relleno">
             <Select
               value={layer.fill}
               onValueChange={(v) => onUpdate({ fill: v as typeof layer.fill })}
@@ -139,7 +145,7 @@ const LayerFields: React.FC<{
                 ))}
               </SelectContent>
             </Select>
-          </Field>
+          </Labeled>
           <ColorField
             label="Color de la forma"
             value={layer.color}
@@ -153,26 +159,26 @@ const LayerFields: React.FC<{
     case "badge":
       return (
         <>
-          <Field label="Título">
+          <Labeled label="Título">
             <Input
               value={layer.title}
               onChange={(e) => onUpdate({ title: e.target.value })}
             />
-          </Field>
-          <Field label="Subtítulo">
+          </Labeled>
+          <Labeled label="Subtítulo">
             <Input
               value={layer.subtitle ?? ""}
               onChange={(e) =>
                 onUpdate({ subtitle: e.target.value || undefined })
               }
             />
-          </Field>
+          </Labeled>
         </>
       );
 
     case "list":
       return (
-        <Field label="Items (uno por línea)">
+        <Labeled label="Items (uno por línea)">
           <Textarea
             value={layer.items.join("\n")}
             rows={5}
@@ -185,43 +191,43 @@ const LayerFields: React.FC<{
               })
             }
           />
-        </Field>
+        </Labeled>
       );
 
     case "stat":
       return (
         <>
-          <Field label="Valor">
+          <Labeled label="Valor">
             <Input
               value={layer.value}
               onChange={(e) => onUpdate({ value: e.target.value })}
             />
-          </Field>
-          <Field label="Etiqueta">
+          </Labeled>
+          <Labeled label="Etiqueta">
             <Input
               value={layer.label ?? ""}
               onChange={(e) => onUpdate({ label: e.target.value || undefined })}
             />
-          </Field>
+          </Labeled>
         </>
       );
 
     case "quote":
       return (
         <>
-          <Field label="Cita">
+          <Labeled label="Cita">
             <Textarea
               value={layer.quote}
               rows={3}
               onChange={(e) => onUpdate({ quote: e.target.value })}
             />
-          </Field>
-          <Field label="Autor">
+          </Labeled>
+          <Labeled label="Autor">
             <Input
               value={layer.author ?? ""}
               onChange={(e) => onUpdate({ author: e.target.value || undefined })}
             />
-          </Field>
+          </Labeled>
         </>
       );
 
@@ -248,20 +254,23 @@ export const PropertiesPanel: React.FC<Props> = ({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <h2 className="text-sm font-semibold">Propiedades</h2>
-        <Badge variant="outline">{typeLabels[scene.type]}</Badge>
-      </div>
+      <CardHeader className="border-b py-3">
+        <CardTitle className="text-sm font-semibold">Propiedades</CardTitle>
+        <CardAction>
+          <Badge variant="outline">{typeLabels[scene.type]}</Badge>
+        </CardAction>
+      </CardHeader>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
-      <Field label="Nombre de la escena">
+      <CardContent className="flex min-h-0 flex-1 flex-col overflow-y-auto py-4">
+      <FieldGroup>
+      <Labeled label="Nombre de la escena">
         <Input
           value={scene.name}
           onChange={(e) => onChangeScene({ name: e.target.value })}
         />
-      </Field>
+      </Labeled>
 
-      <Field label="Duración (segundos)">
+      <Labeled label="Duración (segundos)">
         <Input
           type="number"
           min={1}
@@ -270,7 +279,7 @@ export const PropertiesPanel: React.FC<Props> = ({
             onChangeScene({ durationInSeconds: Number(e.target.value) || 1 })
           }
         />
-      </Field>
+      </Labeled>
 
       {scene.type === "canvas" && (
         <>
@@ -288,7 +297,7 @@ export const PropertiesPanel: React.FC<Props> = ({
             onChange={(accentColor) => onChangeScene({ accentColor })}
           />
 
-          <Field label="Fondo">
+          <Labeled label="Fondo">
             <Select
               value={scene.background}
               onValueChange={(v) =>
@@ -308,7 +317,7 @@ export const PropertiesPanel: React.FC<Props> = ({
                 ))}
               </SelectContent>
             </Select>
-          </Field>
+          </Labeled>
 
           <Separator />
 
@@ -324,7 +333,7 @@ export const PropertiesPanel: React.FC<Props> = ({
           {selectedLayer && (
             <>
               <Separator />
-              <div className="space-y-3">
+              <FieldGroup className="gap-3">
                 <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                   Capa · {layerTypeLabels[selectedLayer.type]}
                 </h3>
@@ -335,7 +344,7 @@ export const PropertiesPanel: React.FC<Props> = ({
                 />
                 <div className="grid grid-cols-2 gap-2">
                   {(["x", "y", "w", "h"] as const).map((k) => (
-                    <Field key={k} label={k.toUpperCase() + " (%)"}>
+                    <Labeled key={k} label={k.toUpperCase() + " (%)"}>
                       <Input
                         type="number"
                         value={Math.round(selectedLayer[k])}
@@ -345,10 +354,10 @@ export const PropertiesPanel: React.FC<Props> = ({
                           } as Partial<CanvasLayer>)
                         }
                       />
-                    </Field>
+                    </Labeled>
                   ))}
                 </div>
-                <Field
+                <Labeled
                   label={`Rotación — ${Math.round(selectedLayer.rotation ?? 0)}°`}
                 >
                   <Slider
@@ -360,8 +369,8 @@ export const PropertiesPanel: React.FC<Props> = ({
                       onUpdateLayer(selectedLayer.id, { rotation: v })
                     }
                   />
-                </Field>
-              </div>
+                </Labeled>
+              </FieldGroup>
             </>
           )}
         </>
@@ -387,7 +396,8 @@ export const PropertiesPanel: React.FC<Props> = ({
         </>
       )}
 
-      </div>
+      </FieldGroup>
+      </CardContent>
     </div>
   );
 };

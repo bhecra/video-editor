@@ -20,7 +20,21 @@ import { COMPOSITION_HEIGHT, COMPOSITION_WIDTH } from "@video/video-config";
 import { ColorField } from "@/components/fields/ColorField";
 import { TransitionFields } from "@/components/fields/TransitionFields";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+} from "@/components/ui/item";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
@@ -132,7 +146,7 @@ export const VideoSettingsDialog: React.FC<Props> = ({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="flex max-h-[calc(100svh-2rem)] flex-col overflow-hidden">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Ajustes del video</DialogTitle>
           <DialogDescription>
@@ -141,26 +155,25 @@ export const VideoSettingsDialog: React.FC<Props> = ({
         </DialogHeader>
 
         {/* The settings scroll; the header and "Listo" stay put. */}
-        <div className="-mx-4 flex-1 space-y-4 overflow-y-auto px-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="subtitles" className="text-sm font-semibold">
-                Subtítulos
-              </Label>
-              <p className="text-xs text-muted-foreground">
+        <ScrollArea className="-mx-6 min-h-0 flex-1">
+          <FieldGroup className="px-6">
+          <Field orientation="horizontal">
+            <FieldContent>
+              <FieldLabel htmlFor="subtitles">Subtítulos</FieldLabel>
+              <FieldDescription>
                 Muestra el guion de cada escena abajo. Aplica en vista previa y
                 al generar.
-              </p>
-            </div>
+              </FieldDescription>
+            </FieldContent>
             <Switch
               id="subtitles"
               checked={settings.subtitles}
               onCheckedChange={(subtitles) => onChange({ subtitles })}
             />
-          </div>
+          </Field>
 
           {settings.subtitles && (
-            <div className="space-y-3 rounded-lg border p-3">
+            <FieldGroup className="gap-3 rounded-lg border p-3">
               <ColorField
                 label="Color del texto"
                 value={subtitleStyle.color}
@@ -173,12 +186,12 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                 }
               />
 
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">
+              <Field>
+                <FieldLabel className="text-xs text-muted-foreground">
                   {subtitleStyle.outlineWidth === 0
                     ? "Borde — sin borde"
                     : `Borde — ${subtitleStyle.outlineWidth} px`}
-                </Label>
+                </FieldLabel>
                 <Slider
                   value={[subtitleStyle.outlineWidth]}
                   min={0}
@@ -188,7 +201,7 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                     patchSubtitleStyle({ outlineWidth })
                   }
                 />
-              </div>
+              </Field>
 
               {subtitleStyle.outlineWidth > 0 && (
                 <ColorField
@@ -199,19 +212,19 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                 />
               )}
 
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <Label
+              <Field orientation="horizontal">
+                <FieldContent>
+                  <FieldLabel
                     htmlFor="subtitle-background"
                     className="text-xs text-muted-foreground"
                   >
                     Fondo detrás del texto
-                  </Label>
-                  <p className="text-xs text-muted-foreground">
+                  </FieldLabel>
+                  <FieldDescription>
                     Degradado oscuro al pie del video para que el texto se lea
                     sobre escenas claras.
-                  </p>
-                </div>
+                  </FieldDescription>
+                </FieldContent>
                 <Switch
                   id="subtitle-background"
                   checked={subtitleStyle.background}
@@ -219,15 +232,15 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                     patchSubtitleStyle({ background })
                   }
                 />
-              </div>
+              </Field>
 
               {subtitleStyle.background && (
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">
+                <Field>
+                  <FieldLabel className="text-xs text-muted-foreground">
                     {`Opacidad del fondo — ${Math.round(
                       subtitleStyle.backgroundOpacity * 100,
                     )}%`}
-                  </Label>
+                  </FieldLabel>
                   <Slider
                     value={[subtitleStyle.backgroundOpacity]}
                     min={0}
@@ -237,7 +250,7 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                       patchSubtitleStyle({ backgroundOpacity })
                     }
                   />
-                </div>
+                </Field>
               )}
 
               {/* The backdrop runs dark to light so both the fill and the
@@ -253,25 +266,22 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                   </span>
                 </div>
               </div>
-            </div>
+            </FieldGroup>
           )}
 
           <Separator />
 
-          <div className="space-y-2">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <Label
-                  htmlFor="default-transition"
-                  className="text-sm font-semibold"
-                >
+          <FieldGroup className="gap-2">
+            <Field orientation="horizontal">
+              <FieldContent>
+                <FieldLabel htmlFor="default-transition">
                   Transición entre escenas
-                </Label>
-                <p className="text-xs text-muted-foreground">
+                </FieldLabel>
+                <FieldDescription>
                   Se aplica a cada corte, salvo donde la escena traiga la suya.
                   Acorta el video: cada transición solapa las dos escenas.
-                </p>
-              </div>
+                </FieldDescription>
+              </FieldContent>
               <Switch
                 id="default-transition"
                 checked={Boolean(settings.defaultTransition)}
@@ -281,7 +291,7 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                   })
                 }
               />
-            </div>
+            </Field>
 
             {settings.defaultTransition && (
               <div className="rounded-lg border p-3">
@@ -291,19 +301,19 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                 />
               </div>
             )}
-          </div>
+          </FieldGroup>
 
           <Separator />
 
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">
-              Logo de la empresa (opcional)
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              Aparece en todas las escenas. Arrástralo sobre el lienzo para
-              ubicarlo. Tira de una esquina para escalar en proporción, o de un
-              lado para cambiar solo el ancho o el alto.
-            </p>
+          <FieldGroup className="gap-2">
+            <Field>
+              <FieldLabel>Logo de la empresa (opcional)</FieldLabel>
+              <FieldDescription>
+                Aparece en todas las escenas. Arrástralo sobre el lienzo para
+                ubicarlo. Tira de una esquina para escalar en proporción, o de un
+                lado para cambiar solo el ancho o el alto.
+              </FieldDescription>
+            </Field>
 
             <input
               ref={fileRef}
@@ -313,8 +323,8 @@ export const VideoSettingsDialog: React.FC<Props> = ({
               onChange={onLogoPicked}
             />
 
-            <div className="flex items-center gap-3 rounded-lg border border-dashed p-3">
-              <div className="flex size-10 items-center justify-center rounded-md bg-muted">
+            <Item variant="outline" className="border-dashed">
+              <ItemMedia variant="icon">
                 {logo ? (
                   <img
                     src={logo.src}
@@ -322,35 +332,39 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                     className="max-h-8 max-w-8 object-contain"
                   />
                 ) : (
-                  <ImageIcon className="size-4 text-muted-foreground" />
+                  <ImageIcon />
                 )}
-              </div>
-              <span className="flex-1 text-sm text-muted-foreground">
-                {logo ? "Logo cargado" : "PNG · hasta 2 MB"}
-              </span>
-              {logo && (
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  aria-label="Quitar logo"
-                  onClick={() => onChange({ logo: undefined })}
-                >
-                  <Trash2 />
+              </ItemMedia>
+              <ItemContent>
+                <ItemDescription>
+                  {logo ? "Logo cargado" : "PNG · hasta 2 MB"}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                {logo && (
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    aria-label="Quitar logo"
+                    onClick={() => onChange({ logo: undefined })}
+                  >
+                    <Trash2 />
+                  </Button>
+                )}
+                <Button variant="outline" onClick={() => fileRef.current?.click()}>
+                  <Upload />
+                  {logo ? "Cambiar" : "Subir"}
                 </Button>
-              )}
-              <Button variant="outline" onClick={() => fileRef.current?.click()}>
-                <Upload />
-                {logo ? "Cambiar" : "Subir"}
-              </Button>
-            </div>
+              </ItemActions>
+            </Item>
 
             {logo && (
               <>
-                <div className="space-y-1.5 pt-1">
+                <FieldGroup className="gap-3 pt-1">
                   <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs text-muted-foreground">
+                    <FieldLabel className="text-xs text-muted-foreground">
                       Tamaño
-                    </Label>
+                    </FieldLabel>
                     {!atOriginalSize && (
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -371,10 +385,10 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">
+                    <Field>
+                      <FieldLabel className="text-xs text-muted-foreground">
                         Ancho — {Math.round(logo.w)}% del video
-                      </Label>
+                      </FieldLabel>
                       <Slider
                         value={[logo.w]}
                         min={LOGO_SIZE_MIN}
@@ -382,11 +396,11 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                         step={1}
                         onValueChange={([w]) => patchLogo({ w })}
                       />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">
+                    </Field>
+                    <Field>
+                      <FieldLabel className="text-xs text-muted-foreground">
                         Alto — {Math.round(logo.h ?? logo.w)}% del video
-                      </Label>
+                      </FieldLabel>
                       <Slider
                         value={[logo.h ?? logo.w]}
                         min={LOGO_SIZE_MIN}
@@ -394,30 +408,30 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                         step={1}
                         onValueChange={([h]) => patchLogo({ h })}
                       />
-                    </div>
+                    </Field>
                   </div>
-                </div>
+                </FieldGroup>
 
-                <div className="space-y-3 rounded-lg border p-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <Label
+                <FieldGroup className="gap-3 rounded-lg border p-3">
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel
                         htmlFor="logo-background"
                         className="text-xs text-muted-foreground"
                       >
                         Fondo detrás del logo
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
+                      </FieldLabel>
+                      <FieldDescription>
                         Una placa bajo el logo, para que se lea sobre escenas
                         del mismo tono. Va dentro del tamaño de arriba.
-                      </p>
-                    </div>
+                      </FieldDescription>
+                    </FieldContent>
                     <Switch
                       id="logo-background"
                       checked={logo.background}
                       onCheckedChange={(background) => patchLogo({ background })}
                     />
-                  </div>
+                  </Field>
 
                   {logo.background && (
                     <>
@@ -440,12 +454,12 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                         }
                       />
 
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">
+                      <Field>
+                        <FieldLabel className="text-xs text-muted-foreground">
                           {`Opacidad — ${Math.round(
                             logo.backgroundOpacity * 100,
                           )}%`}
-                        </Label>
+                        </FieldLabel>
                         <Slider
                           value={[logo.backgroundOpacity]}
                           min={0}
@@ -455,12 +469,12 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                             patchLogo({ backgroundOpacity })
                           }
                         />
-                      </div>
+                      </Field>
 
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">
+                      <Field>
+                        <FieldLabel className="text-xs text-muted-foreground">
                           {`Margen interno — ${logo.backgroundPadding}%`}
-                        </Label>
+                        </FieldLabel>
                         <Slider
                           value={[logo.backgroundPadding]}
                           min={0}
@@ -470,14 +484,14 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                             patchLogo({ backgroundPadding })
                           }
                         />
-                      </div>
+                      </Field>
 
-                      <div className="space-y-1.5">
-                        <Label className="text-xs text-muted-foreground">
+                      <Field>
+                        <FieldLabel className="text-xs text-muted-foreground">
                           {logo.backgroundRadius === 0
                             ? "Esquinas — rectas"
                             : `Esquinas — ${logo.backgroundRadius}%`}
-                        </Label>
+                        </FieldLabel>
                         <Slider
                           value={[logo.backgroundRadius]}
                           min={0}
@@ -487,7 +501,7 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                             patchLogo({ backgroundRadius })
                           }
                         />
-                      </div>
+                      </Field>
                     </>
                   )}
 
@@ -521,11 +535,12 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                       </div>
                     </div>
                   </div>
-                </div>
+                </FieldGroup>
               </>
             )}
-          </div>
-        </div>
+          </FieldGroup>
+          </FieldGroup>
+        </ScrollArea>
 
         <DialogFooter>
           <DialogClose asChild>
