@@ -41,6 +41,7 @@
   "scripts": {
     "dev": "cd editor && vite",
     "render-server": "tsx watch render-server/server.ts",
+    "build-module-examples": "tsx scripts/build-module-examples.ts",
     "studio": "remotion studio",
     "build": "remotion bundle",
     "lint": "eslint src && tsc && tsc -p editor",

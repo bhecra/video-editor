@@ -28,6 +28,7 @@ Tres piezas, cada una con una responsabilidad:
 src/              MOTOR DE VIDEO — lo que se renderiza (Remotion)
 editor/           EDITOR — la interfaz (React + Vite)
 render-server/    API DE RENDER — genera el .mp4 (Express)
+scripts/          HERRAMIENTAS — generadores que escriben contenido en editor/
 ```
 
 ### El flujo
@@ -115,8 +116,11 @@ editor/src/
 ├── App.tsx                         EL ROUTER: galería o editor de un ejemplo
 ├── examples/                       el catálogo de guiones de ejemplo
 │   ├── index.ts                    registro: el orden define la ruta
-│   ├── onboarding-comercial.ts     ejemplo 1 — /video-examples/1
-│   └── seguridad-informacion.ts    ejemplo 2 — /video-examples/2
+│   ├── onboarding-comercial.ts     ejemplo 1 — escrito a mano
+│   ├── seguridad-informacion.ts    ejemplo 2 — escrito a mano
+│   ├── modulo-1-conceptos.ts       ejemplo 3 — generado desde los módulos
+│   ├── modulo-2-instrumentos.ts    ejemplo 4 — generado
+│   └── modulo-3-trabajo-de-campo.ts ejemplo 5 — generado
 ├── router/                         rutas sin dependencias externas
 │   ├── routes.ts                   el mapa: /video-examples/:n
 │   ├── useRoute.ts                 ruta actual (History API) y navigate
@@ -169,7 +173,11 @@ callbacks.
 |---|---|
 | `/` | redirige visualmente a la galería |
 | `/video-examples` | la galería con todos los ejemplos |
-| `/video-examples/1` | el editor con el ejemplo 1 |
+| `/video-examples/1` | Onboarding comercial — 30 días |
+| `/video-examples/2` | Seguridad de la información |
+| `/video-examples/3` | Topografía · Módulo 1 — Conceptos |
+| `/video-examples/4` | Topografía · Módulo 2 — Instrumentos |
+| `/video-examples/5` | Topografía · Módulo 3 — Trabajo de campo |
 | `/video-examples/:n` | el editor con el ejemplo n |
 
 El número de la URL es la posición en `examples/index.ts`, así que añadir un
@@ -185,6 +193,39 @@ export const videoExamples: VideoExample[] = [
 El editor se monta con `key={número}`: `useSceneEditor` lee su documento una
 sola vez, al montar, así que cambiar de ejemplo lo remonta con el guion nuevo y
 no arrastra las ediciones del anterior.
+
+#### Ejemplos generados desde un curso
+
+Los tres módulos de topografía no se escribieron a mano: salen de una carpeta
+con el material del curso, una escena por línea de narración.
+
+```bash
+npm run build-module-examples [carpeta]   # por defecto ~/Downloads/Audios
+```
+
+El script espera esta forma, y el número de escena es lo que une las tres
+piezas:
+
+```
+carpeta/
+├── audio_m1/escena_N.mp3               la narración locutada
+├── m1_fotografia/fotografia_N.png      la imagen de esa escena
+└── narraciones_m1_subtitulos.txt       línea N = guion de la escena N
+```
+
+Por cada escena: el audio define la duración (su duración real más una cola de
+0,4 s), la fotografía es la imagen y la línea de narración queda como `script`,
+que con `subtitles: true` se ve como subtítulo. Si a una línea le falta el audio
+o la fotografía, esa escena se omite con un aviso y el resto del módulo sigue
+siendo un video válido.
+
+La media se copia a `render-server/uploads/modulos/<módulo>/` — fuera de git,
+igual que cualquier archivo subido desde el editor — y los ejemplos apuntan a
+las URL que la sirven. **Estos tres ejemplos necesitan el servidor de render
+arriba** para ver las fotos y oír el audio, no solo para generar el `.mp4`.
+
+Los archivos generados llevan un encabezado que lo dice: se regeneran, no se
+editan a mano.
 
 Los alias evitan rutas relativas largas: `@/` apunta a `editor/src` y
 `@video/` a `src/video`.
