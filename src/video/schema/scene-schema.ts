@@ -188,7 +188,17 @@ export const LogoSettingsSchema = z.object({
   src: z.string(),
   x: z.number(),
   y: z.number(),
+  // Width of the whole logo footprint, plate included.
   w: z.number(),
+  // A plate behind the mark, so a dark logo stays visible over a dark scene.
+  // Off by default: a logo made for video usually needs no help.
+  background: z.boolean().default(false),
+  backgroundColor: zColor().default("#ffffff"),
+  backgroundOpacity: z.number().min(0).max(1).default(0.9),
+  // Both are % of the logo footprint width, so they hold at any size and any
+  // output resolution. The padding insets the mark inside the footprint.
+  backgroundPadding: z.number().min(0).max(25).default(8),
+  backgroundRadius: z.number().min(0).max(50).default(12),
 });
 
 export const SubtitleStyleSchema = z.object({
@@ -210,6 +220,16 @@ export const VideoSettingsSchema = z.object({
   // Used between every pair of scenes that does not carry its own transition.
   defaultTransition: SceneTransitionSchema.optional(),
 });
+
+// Applied to every logo as it is uploaded, so the schema's defaults and the
+// editor's starting point never drift apart.
+export const defaultLogoBackground = {
+  background: false,
+  backgroundColor: "#ffffff",
+  backgroundOpacity: 0.9,
+  backgroundPadding: 8,
+  backgroundRadius: 12,
+} satisfies Omit<LogoSettings, "src" | "x" | "y" | "w">;
 
 export const defaultSubtitleStyle: SubtitleStyle = {
   color: "#ffffff",

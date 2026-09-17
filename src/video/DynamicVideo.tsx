@@ -8,7 +8,12 @@ import {
   type SubtitleStyle,
 } from "./schema/scene-schema";
 import { SceneRenderer } from "./renderers/SceneRenderer";
-import { subtitleScrimStyle, subtitleTextStyle } from "./theme/canvas-styles";
+import {
+  logoBackdropStyle,
+  logoBoxStyle,
+  subtitleScrimStyle,
+  subtitleTextStyle,
+} from "./theme/canvas-styles";
 import {
   resolveTransitions,
   sceneDurationsInFrames,
@@ -40,6 +45,9 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({
 
   // A TransitionSeries with no transitions between its sequences behaves
   // exactly like a Series, so the same tree covers both cases.
+  // The plate's padding and radius are a % of the logo, so they need the
+  // width the logo is actually drawn at.
+  const logoWidthPx = logo ? (logo.w / 100) * width : 0;
   const durations = sceneDurationsInFrames(scenes, fps);
   const transitions = resolveTransitions(scenes, settings, fps);
 
@@ -83,16 +91,28 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({
       {/* Sits outside the series so it stays on screen for every scene, and so
           transitions move the scenes underneath it rather than the logo. */}
       {logo && (
-        <Img
-          src={logo.src}
+        <div
           style={{
             position: "absolute",
             left: `${logo.x}%`,
             top: `${logo.y}%`,
             width: `${logo.w}%`,
-            objectFit: "contain",
           }}
-        />
+        >
+          <div style={logoBoxStyle(logo, logoWidthPx)}>
+            {logo.background && (
+              <div style={logoBackdropStyle(logo, logoWidthPx)} />
+            )}
+            <Img
+              src={logo.src}
+              style={{
+                position: "relative",
+                width: "100%",
+                objectFit: "contain",
+              }}
+            />
+          </div>
+        </div>
       )}
     </AbsoluteFill>
   );

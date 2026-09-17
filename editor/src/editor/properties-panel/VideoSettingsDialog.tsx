@@ -1,11 +1,15 @@
 import { useRef } from "react";
 import { ImageIcon, Settings2, Trash2, Upload } from "lucide-react";
 import {
+  defaultLogoBackground,
   defaultSubtitleStyle,
   defaultTransition,
+  type LogoSettings,
   type VideoSettings,
 } from "@video/schema/scene-schema";
 import {
+  logoBackdropStyle,
+  logoBoxStyle,
   subtitleScrimStyle,
   subtitleTextStyle,
 } from "@video/theme/canvas-styles";
@@ -27,6 +31,11 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 
+// On-screen width of the logo swatch in the preview below, in px. The plate's
+// padding and radius are relative to it, exactly as they are to the logo's
+// width in the render.
+const LOGO_PREVIEW_WIDTH = 120;
+
 type Props = {
   settings: VideoSettings;
   onChange: (patch: Partial<VideoSettings>) => void;
@@ -42,6 +51,9 @@ export const VideoSettingsDialog: React.FC<Props> = ({
   const patchSubtitleStyle = (patch: Partial<typeof subtitleStyle>) =>
     onChange({ subtitleStyle: { ...subtitleStyle, ...patch } });
 
+  const patchLogo = (patch: Partial<LogoSettings>) =>
+    logo && onChange({ logo: { ...logo, ...patch } });
+
   const onLogoPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -50,7 +62,13 @@ export const VideoSettingsDialog: React.FC<Props> = ({
     reader.onload = () =>
       onChange({
         // Dropped top-right by default; it can be dragged from there.
-        logo: { src: String(reader.result), x: 82, y: 6, w: 12 },
+        logo: {
+          ...defaultLogoBackground,
+          src: String(reader.result),
+          x: 82,
+          y: 6,
+          w: 12,
+        },
       });
     reader.readAsDataURL(file);
   };
@@ -276,18 +294,140 @@ export const VideoSettingsDialog: React.FC<Props> = ({
             </div>
 
             {logo && (
-              <div className="space-y-1.5 pt-1">
-                <Label className="text-xs text-muted-foreground">
-                  Tamaño — {Math.round(logo.w)}% del ancho
-                </Label>
-                <Slider
-                  value={[logo.w]}
-                  min={4}
-                  max={40}
-                  step={1}
-                  onValueChange={([w]) => onChange({ logo: { ...logo, w } })}
-                />
-              </div>
+              <>
+                <div className="space-y-1.5 pt-1">
+                  <Label className="text-xs text-muted-foreground">
+                    Tamaño — {Math.round(logo.w)}% del ancho
+                  </Label>
+                  <Slider
+                    value={[logo.w]}
+                    min={4}
+                    max={40}
+                    step={1}
+                    onValueChange={([w]) => patchLogo({ w })}
+                  />
+                </div>
+
+                <div className="space-y-3 rounded-lg border p-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <Label
+                        htmlFor="logo-background"
+                        className="text-xs text-muted-foreground"
+                      >
+                        Fondo detrás del logo
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        Una placa bajo el logo, para que se lea sobre escenas
+                        del mismo tono. Va dentro del tamaño de arriba.
+                      </p>
+                    </div>
+                    <Switch
+                      id="logo-background"
+                      checked={logo.background}
+                      onCheckedChange={(background) => patchLogo({ background })}
+                    />
+                  </div>
+
+                  {logo.background && (
+                    <>
+                      <ColorField
+                        label="Color del fondo"
+                        value={logo.backgroundColor}
+                        fallback={defaultLogoBackground.backgroundColor}
+                        onChange={(backgroundColor) =>
+                          patchLogo({ backgroundColor })
+                        }
+                        onReset={
+                          logo.backgroundColor ===
+                          defaultLogoBackground.backgroundColor
+                            ? undefined
+                            : () =>
+                                patchLogo({
+                                  backgroundColor:
+                                    defaultLogoBackground.backgroundColor,
+                                })
+                        }
+                      />
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">
+                          {`Opacidad — ${Math.round(
+                            logo.backgroundOpacity * 100,
+                          )}%`}
+                        </Label>
+                        <Slider
+                          value={[logo.backgroundOpacity]}
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          onValueChange={([backgroundOpacity]) =>
+                            patchLogo({ backgroundOpacity })
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">
+                          {`Margen interno — ${logo.backgroundPadding}%`}
+                        </Label>
+                        <Slider
+                          value={[logo.backgroundPadding]}
+                          min={0}
+                          max={25}
+                          step={1}
+                          onValueChange={([backgroundPadding]) =>
+                            patchLogo({ backgroundPadding })
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">
+                          {logo.backgroundRadius === 0
+                            ? "Esquinas — rectas"
+                            : `Esquinas — ${logo.backgroundRadius}%`}
+                        </Label>
+                        <Slider
+                          value={[logo.backgroundRadius]}
+                          min={0}
+                          max={50}
+                          step={1}
+                          onValueChange={([backgroundRadius]) =>
+                            patchLogo({ backgroundRadius })
+                          }
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Same dark-to-light backdrop as the subtitle preview, with
+                      the plate the render paints sitting on top of it. */}
+                  <div
+                    className="flex justify-center overflow-hidden rounded-md bg-[linear-gradient(110deg,#04101f_0%,#3b4a63_55%,#c9d3e4_100%)] p-4"
+                    aria-hidden
+                  >
+                    <div style={{ width: LOGO_PREVIEW_WIDTH }}>
+                      <div style={logoBoxStyle(logo, LOGO_PREVIEW_WIDTH)}>
+                        {logo.background && (
+                          <div
+                            style={logoBackdropStyle(logo, LOGO_PREVIEW_WIDTH)}
+                          />
+                        )}
+                        <img
+                          src={logo.src}
+                          alt=""
+                          style={{
+                            position: "relative",
+                            width: "100%",
+                            objectFit: "contain",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </div>

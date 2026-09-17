@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type {
   CanvasBackground,
+  LogoSettings,
   ShapeLayer,
   SubtitleStyle,
   TextLayer,
@@ -170,4 +171,35 @@ export const subtitleScrimStyle = (
   // Generous top padding gives the gradient room to fade before it reaches
   // the text; the bottom keeps the old distance to the edge of the frame.
   padding: `${fontSize * 2.4}px 8% ${fontSize * 1.65}px`,
+});
+
+// The logo's plate. Padding and corner radius are stored as a % of the logo's
+// own width, so they are resolved against the width the logo is drawn at:
+// `widthPx` is the footprint in the pixels of whatever surface is painting it
+// (the composition when rendering, the dialog's swatch when previewing).
+// Shared by the burned-in logo and the settings dialog's preview.
+export const logoBoxStyle = (
+  logo: LogoSettings,
+  widthPx: number,
+): CSSProperties => ({
+  position: "relative",
+  display: "flex",
+  boxSizing: "border-box",
+  width: "100%",
+  // Turning the plate off keeps the padding, so the mark does not jump size.
+  padding: (logo.backgroundPadding / 100) * widthPx,
+});
+
+// Sits behind the mark rather than around it, so the opacity applies to the
+// plate alone and the logo itself stays fully opaque, whatever colour format
+// the plate was picked in.
+export const logoBackdropStyle = (
+  logo: LogoSettings,
+  widthPx: number,
+): CSSProperties => ({
+  position: "absolute",
+  inset: 0,
+  backgroundColor: logo.backgroundColor,
+  opacity: logo.backgroundOpacity,
+  borderRadius: (logo.backgroundRadius / 100) * widthPx,
 });

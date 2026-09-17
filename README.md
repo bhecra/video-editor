@@ -100,7 +100,7 @@ src/
     │   ├── scene-schema.ts         esquemas zod + tipos de escena y capa
     │   └── layer-fields.ts         leer/escribir un campo de una capa
     └── theme/                      apariencia
-        ├── canvas-styles.ts        estilos de fondo, texto y subtítulos
+        ├── canvas-styles.ts        estilos de fondo, texto, subtítulos y logo
         ├── canvas-templates.ts     layouts predefinidos y sus capas
         └── fonts.ts                fuentes cargadas para el render
 ```
@@ -176,7 +176,7 @@ editor/src/
 │   │   ├── SceneCanvas.tsx         frame editable con overlays encima
 │   │   ├── CanvasLayerOverlay.tsx  mover, redimensionar y editar capas
 │   │   ├── InlineFieldEditor.tsx   edición de texto sobre el propio frame
-│   │   ├── LogoOverlay.tsx         arrastrar el logo del video
+│   │   ├── LogoOverlay.tsx         mover y escalar el logo del video
 │   │   ├── ScenePlayer.tsx         reproducción real de la composición
 │   │   ├── RenderedVideo.tsx       el .mp4 ya generado
 │   │   └── SceneAudioPanel.tsx     audio y guion de la escena
