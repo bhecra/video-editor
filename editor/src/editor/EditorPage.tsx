@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { onboardingVideo } from "./state/sample-video";
+import type { VideoExample } from "@/examples";
 import { Card } from "@/components/ui/card";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useRenderJob } from "./api/useRenderJob";
@@ -13,14 +13,17 @@ import { PropertiesPanel } from "./properties-panel/PropertiesPanel";
 import { ScenesPanel } from "./scenes-panel/ScenesPanel";
 import { useSceneEditor } from "./state/useSceneEditor";
 
-const VIDEO_TITLE = "Onboarding comercial — 30 días";
+type Props = {
+  example: VideoExample;
+};
 
 /**
  * The page: owns the document state (useSceneEditor) and the render job, and
- * lays out the three columns — scenes, preview, properties.
+ * lays out the three columns — scenes, preview, properties. The example it
+ * opens with comes from the route; the edits from there on live here.
  */
-export const EditorPage: React.FC = () => {
-  const editor = useSceneEditor(onboardingVideo);
+export const EditorPage: React.FC<Props> = ({ example }) => {
+  const editor = useSceneEditor(example.video);
   const [activeTab, setActiveTab] = useState<PreviewTab>("editar");
   const [previewScope, setPreviewScope] = useState<PreviewScope>("escena");
 
@@ -31,16 +34,18 @@ export const EditorPage: React.FC = () => {
     void generate({ scenes: editor.scenes, settings: editor.settings });
 
   // Adding or copying a scene selects it, so the editing tab is what to show.
-  const editNewScene = <T,>(action: (arg: T) => void) => (arg: T) => {
-    action(arg);
-    setActiveTab("editar");
-  };
+  const editNewScene =
+    <T,>(action: (arg: T) => void) =>
+    (arg: T) => {
+      action(arg);
+      setActiveTab("editar");
+    };
 
   return (
     <TooltipProvider>
       <div className="ia-glow-orbs flex h-screen flex-col text-foreground">
         <EditorHeader
-          title={VIDEO_TITLE}
+          title={example.title}
           settings={editor.settings}
           onChangeSettings={editor.patchSettings}
           renderState={renderState}

@@ -1,6 +1,9 @@
+import { ArrowLeft } from "lucide-react";
 import type { VideoSettings } from "@video/schema/scene-schema";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Link } from "@/router/Link";
+import { GALLERY_PATH } from "@/router/routes";
 import type { RenderState } from "./api/useRenderJob";
 import { VideoSettingsDialog } from "./properties-panel/VideoSettingsDialog";
 
@@ -21,7 +24,19 @@ export const EditorHeader: React.FC<Props> = ({
   onGenerate,
 }) => (
   <header className="flex items-center justify-between px-5 py-3">
-    <div className="text-base font-semibold">{title}</div>
+    <div className="flex min-w-0 items-center gap-2">
+      <Button
+        asChild
+        size="icon-sm"
+        variant="ghost"
+        aria-label="Ver los ejemplos"
+      >
+        <Link to={GALLERY_PATH}>
+          <ArrowLeft />
+        </Link>
+      </Button>
+      <div className="truncate text-base font-semibold">{title}</div>
+    </div>
     <div className="flex items-center gap-4">
       {renderState.status === "rendering" && (
         <span className="font-mono text-xs text-muted-foreground">
@@ -36,7 +51,10 @@ export const EditorHeader: React.FC<Props> = ({
         </Alert>
       )}
       <VideoSettingsDialog settings={settings} onChange={onChangeSettings} />
-      <Button onClick={onGenerate} disabled={renderState.status === "rendering"}>
+      <Button
+        onClick={onGenerate}
+        disabled={renderState.status === "rendering"}
+      >
         {renderState.status === "rendering" ? "Generando…" : "Generar video"}
       </Button>
     </div>

@@ -1,8 +1,8 @@
 import type { DynamicVideoProps } from "@video/schema/scene-schema";
 
-// The document the editor opens with. It is product content, not part of the
-// contract: the engine in src/video/ never imports it.
-export const onboardingVideo: DynamicVideoProps = {
+// One of the sample scripts the editor can open — product content, not part of
+// the contract: the engine in src/video/ never imports it.
+export const onboardingComercial: DynamicVideoProps = {
   settings: { subtitles: false },
   scenes: [
     {
@@ -119,8 +119,7 @@ export const onboardingVideo: DynamicVideoProps = {
     },
     {
       id: "s3",
-      script:
-        "La semana uno es de contexto: entender qué vendemos y a quién.",
+      script: "La semana uno es de contexto: entender qué vendemos y a quién.",
       name: "La semana uno es de contexto",
       type: "canvas",
       layout: "divisor-seccion",
@@ -216,8 +215,7 @@ export const onboardingVideo: DynamicVideoProps = {
     },
     {
       id: "s7",
-      script:
-        "Configura tus herramientas antes de arrancar la semana dos.",
+      script: "Configura tus herramientas antes de arrancar la semana dos.",
       name: "Configura tus herramientas",
       type: "canvas",
       layout: "lista-ordenada",
@@ -254,8 +252,7 @@ export const onboardingVideo: DynamicVideoProps = {
     },
     {
       id: "s8",
-      script:
-        "Aprende la disciplina del CRM desde el primer día.",
+      script: "Aprende la disciplina del CRM desde el primer día.",
       name: "Aprende la disciplina del CRM",
       type: "canvas",
       layout: "cita",

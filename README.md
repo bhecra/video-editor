@@ -62,7 +62,7 @@ produzca ese objeto sirve igual.
 ```
 
 Las flechas van en un solo sentido: `src/video/` no sabe que existe un editor
-ni un servidor, y tampoco contiene contenido — el guion de ejemplo vive en el
+ni un servidor, y tampoco contiene contenido — los guiones de ejemplo viven en el
 editor, y Remotion Studio abre con una escena de relleno. Cada uno importa lo
 que necesita del motor:
 
@@ -107,18 +107,30 @@ exactamente lo que sale renderizado.
 
 ### `editor/` — el editor
 
-Separado por capas: la page compone tres secciones y una capa de API.
+Separado por capas: una ruta elige el ejemplo, la page compone tres secciones
+y una capa de API.
 
 ```
 editor/src/
-├── App.tsx                         monta EditorPage
+├── App.tsx                         EL ROUTER: galería o editor de un ejemplo
+├── examples/                       el catálogo de guiones de ejemplo
+│   ├── index.ts                    registro: el orden define la ruta
+│   ├── onboarding-comercial.ts     ejemplo 1 — /video-examples/1
+│   └── seguridad-informacion.ts    ejemplo 2 — /video-examples/2
+├── router/                         rutas sin dependencias externas
+│   ├── routes.ts                   el mapa: /video-examples/:n
+│   ├── useRoute.ts                 ruta actual (History API) y navigate
+│   └── Link.tsx                    <a href> que navega sin recargar
+├── gallery/                        LA HOME: los ejemplos disponibles
+│   ├── ExamplesGallery.tsx         una tarjeta por ejemplo
+│   ├── ExampleCover.tsx            portada: primera escena real del guion
+│   └── NotFound.tsx                ruta o ejemplo inexistente
 ├── editor/
 │   ├── EditorPage.tsx              LA PAGE: estado raíz + layout de 3 columnas
 │   ├── EditorHeader.tsx            ajustes del video y botón "Generar video"
 │   ├── state/                      el documento que se edita
 │   │   ├── useSceneEditor.ts       escenas, settings, selección y operaciones
-│   │   ├── scene-factory.ts        crear/duplicar escenas y capas
-│   │   └── sample-video.ts         el guion con el que abre el editor
+│   │   └── scene-factory.ts        crear/duplicar escenas y capas
 │   ├── scenes-panel/               SECCIÓN: escenas (columna izquierda)
 │   │   ├── ScenesPanel.tsx         lista, duración total, añadir escena
 │   │   └── SceneCard.tsx           una escena de la lista
@@ -150,6 +162,29 @@ editor/src/
 Nada fuera de `editor/api/` habla con el servidor de render, y nada fuera de
 `editor/state/` modifica las escenas: las secciones reciben props y emiten
 callbacks.
+
+#### Las rutas
+
+| Ruta | Qué abre |
+|---|---|
+| `/` | redirige visualmente a la galería |
+| `/video-examples` | la galería con todos los ejemplos |
+| `/video-examples/1` | el editor con el ejemplo 1 |
+| `/video-examples/:n` | el editor con el ejemplo n |
+
+El número de la URL es la posición en `examples/index.ts`, así que añadir un
+ejemplo es empujar una entrada a ese array: la galería y la ruta salen solas.
+
+```ts
+export const videoExamples: VideoExample[] = [
+  { title, description, video: onboardingComercial },   // /video-examples/1
+  { title, description, video: seguridadInformacion },  // /video-examples/2
+];
+```
+
+El editor se monta con `key={número}`: `useSceneEditor` lee su documento una
+sola vez, al montar, así que cambiar de ejemplo lo remonta con el guion nuevo y
+no arrastra las ediciones del anterior.
 
 Los alias evitan rutas relativas largas: `@/` apunta a `editor/src` y
 `@video/` a `src/video`.
