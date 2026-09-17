@@ -1,5 +1,7 @@
+import { Fragment } from "react";
 import { Audio } from "@remotion/media";
-import { AbsoluteFill, Img, Series, useVideoConfig } from "remotion";
+import { TransitionSeries } from "@remotion/transitions";
+import { AbsoluteFill, Img, useVideoConfig } from "remotion";
 import {
   defaultSubtitleStyle,
   type DynamicVideoProps,
@@ -7,6 +9,12 @@ import {
 } from "./schema/scene-schema";
 import { SceneRenderer } from "./renderers/SceneRenderer";
 import { subtitleScrimStyle, subtitleTextStyle } from "./theme/canvas-styles";
+import {
+  resolveTransitions,
+  sceneDurationsInFrames,
+  transitionPresentation,
+  transitionTiming,
+} from "./transitions";
 
 const Subtitle: React.FC<{ text: string; style?: SubtitleStyle }> = ({
   text,
@@ -27,30 +35,53 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({
   scenes,
   settings,
 }) => {
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
   const logo = settings?.logo;
+
+  // A TransitionSeries with no transitions between its sequences behaves
+  // exactly like a Series, so the same tree covers both cases.
+  const durations = sceneDurationsInFrames(scenes, fps);
+  const transitions = resolveTransitions(scenes, settings, fps);
 
   return (
     <AbsoluteFill>
-      <Series>
-        {scenes.map((scene) => (
-          <Series.Sequence
-            key={scene.id}
-            name={scene.name}
-            durationInFrames={Math.round(scene.durationInSeconds * fps)}
-          >
-            <SceneRenderer scene={scene} />
-            {settings?.subtitles && scene.script && (
-              <Subtitle text={scene.script} style={settings.subtitleStyle} />
-            )}
-            {scene.audioUrl && (
-              <Audio src={scene.audioUrl} volume={() => scene.audioVolume ?? 1} />
-            )}
-          </Series.Sequence>
-        ))}
-      </Series>
+      <TransitionSeries>
+        {scenes.map((scene, index) => {
+          const transition = transitions[index];
 
-      {/* Sits outside the Series so it stays on screen for every scene. */}
+          return (
+            <Fragment key={scene.id}>
+              {transition && (
+                <TransitionSeries.Transition
+                  timing={transitionTiming(transition)}
+                  presentation={transitionPresentation(transition.transition, {
+                    width,
+                    height,
+                  })}
+                />
+              )}
+              <TransitionSeries.Sequence
+                name={scene.name}
+                durationInFrames={durations[index]}
+              >
+                <SceneRenderer scene={scene} />
+                {settings?.subtitles && scene.script && (
+                  <Subtitle text={scene.script} style={settings.subtitleStyle} />
+                )}
+                {scene.audioUrl && (
+                  <Audio
+                    src={scene.audioUrl}
+                    volume={() => scene.audioVolume ?? 1}
+                  />
+                )}
+              </TransitionSeries.Sequence>
+            </Fragment>
+          );
+        })}
+      </TransitionSeries>
+
+      {/* Sits outside the series so it stays on screen for every scene, and so
+          transitions move the scenes underneath it rather than the logo. */}
       {logo && (
         <Img
           src={logo.src}

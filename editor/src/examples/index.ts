@@ -1,4 +1,6 @@
 import type { DynamicVideoProps } from "@video/schema/scene-schema";
+import { totalDurationInSeconds } from "@video/transitions";
+import { FPS } from "@video/video-config";
 import { moduloConceptos } from "./modulo-1-conceptos";
 import { moduloInstrumentos } from "./modulo-2-instrumentos";
 import { moduloTrabajoDeCampo } from "./modulo-3-trabajo-de-campo";
@@ -53,5 +55,6 @@ export const videoExamples: VideoExample[] = [
 export const getExample = (number: number): VideoExample | null =>
   videoExamples[number - 1] ?? null;
 
+/** What the gallery shows: the played length, transitions already discounted. */
 export const totalSeconds = (example: VideoExample): number =>
-  example.video.scenes.reduce((sum, s) => sum + s.durationInSeconds, 0);
+  totalDurationInSeconds(example.video.scenes, example.video.settings, FPS);

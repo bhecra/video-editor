@@ -8,7 +8,10 @@ import type { DynamicVideoProps } from "@video/schema/scene-schema";
 const MEDIA = "http://localhost:4000/uploads/modulos/m1";
 
 export const moduloConceptos: DynamicVideoProps = {
-  settings: { subtitles: true },
+  settings: {
+    subtitles: true,
+    defaultTransition: { type: "zoom", durationInSeconds: 0.5 },
+  },
   scenes: [
     {
       id: "m1-1",

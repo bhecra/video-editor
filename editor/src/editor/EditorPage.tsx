@@ -57,12 +57,14 @@ export const EditorPage: React.FC<Props> = ({ example }) => {
         <div className="flex flex-1 gap-4 overflow-hidden px-4 pt-1 pb-4">
           <ScenesPanel
             scenes={editor.scenes}
+            settings={editor.settings}
             selectedSceneId={editor.selectedSceneId}
             totalSeconds={editor.totalSeconds}
             onSelectScene={editor.selectScene}
             onAddScene={editNewScene(editor.addScene)}
             onDuplicateScene={editNewScene(editor.copyScene)}
             onDeleteScene={editor.deleteScene}
+            onChangeTransition={editor.setSceneTransition}
           />
 
           <PreviewPanel

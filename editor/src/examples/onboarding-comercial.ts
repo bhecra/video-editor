@@ -3,7 +3,10 @@ import type { DynamicVideoProps } from "@video/schema/scene-schema";
 // One of the sample scripts the editor can open — product content, not part of
 // the contract: the engine in src/video/ never imports it.
 export const onboardingComercial: DynamicVideoProps = {
-  settings: { subtitles: false },
+  settings: {
+    subtitles: false,
+    defaultTransition: { type: "zoom", durationInSeconds: 0.5 },
+  },
   scenes: [
     {
       id: "s1",

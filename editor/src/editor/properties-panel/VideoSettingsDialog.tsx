@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { ImageIcon, Settings2, Trash2, Upload } from "lucide-react";
 import {
   defaultSubtitleStyle,
+  defaultTransition,
   type VideoSettings,
 } from "@video/schema/scene-schema";
 import {
@@ -9,6 +10,7 @@ import {
   subtitleTextStyle,
 } from "@video/theme/canvas-styles";
 import { ColorField } from "@/components/fields/ColorField";
+import { TransitionFields } from "@/components/fields/TransitionFields";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -183,6 +185,43 @@ export const VideoSettingsDialog: React.FC<Props> = ({
             </div>
           </div>
         )}
+
+        <Separator />
+
+        <div className="space-y-2">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <Label
+                htmlFor="default-transition"
+                className="text-sm font-semibold"
+              >
+                Transición entre escenas
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Se aplica a cada corte, salvo donde la escena traiga la suya.
+                Acorta el video: cada transición solapa las dos escenas.
+              </p>
+            </div>
+            <Switch
+              id="default-transition"
+              checked={Boolean(settings.defaultTransition)}
+              onCheckedChange={(on) =>
+                onChange({
+                  defaultTransition: on ? defaultTransition : undefined,
+                })
+              }
+            />
+          </div>
+
+          {settings.defaultTransition && (
+            <div className="rounded-lg border p-3">
+              <TransitionFields
+                transition={settings.defaultTransition}
+                onChange={(defaultTransition) => onChange({ defaultTransition })}
+              />
+            </div>
+          )}
+        </div>
 
         <Separator />
 

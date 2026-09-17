@@ -179,7 +179,10 @@ const buildModule = async (spec: ModuleSpec) => {
 const MEDIA = "${MEDIA_BASE_URL}/${MEDIA_SUBDIR}/${spec.key}";
 
 export const ${spec.exportName}: DynamicVideoProps = {
-  settings: { subtitles: true },
+  settings: {
+    subtitles: true,
+    defaultTransition: { type: "zoom", durationInSeconds: 0.5 },
+  },
   scenes: [
 ${scenes.join("\n")}
   ],

@@ -5,6 +5,7 @@ import type { DynamicVideoProps } from "@video/schema/scene-schema";
 export const seguridadInformacion: DynamicVideoProps = {
   settings: {
     subtitles: true,
+    defaultTransition: { type: "zoom", durationInSeconds: 0.5 },
     subtitleStyle: {
       color: "#ffffff",
       outlineColor: "#0b0718",

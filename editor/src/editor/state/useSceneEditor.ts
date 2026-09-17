@@ -5,9 +5,12 @@ import {
   type CanvasScene,
   type DynamicVideoProps,
   type Scene,
+  type SceneTransition,
   type VideoSettings,
 } from "@video/schema/scene-schema";
 import { canvasTemplates, createLayersForLayout } from "@video/theme/canvas-templates";
+import { totalDurationInSeconds } from "@video/transitions";
+import { FPS } from "@video/video-config";
 import { createLayer, createScene, duplicateScene } from "./scene-factory";
 
 /**
@@ -25,7 +28,9 @@ export const useSceneEditor = (initial: DynamicVideoProps) => {
 
   const selectedScene =
     scenes.find((s) => s.id === selectedSceneId) ?? scenes[0];
-  const totalSeconds = scenes.reduce((sum, s) => sum + s.durationInSeconds, 0);
+  // Transitions overlap the scenes they join, so this is not the plain sum of
+  // the scene durations.
+  const totalSeconds = totalDurationInSeconds(scenes, settings, FPS);
 
   const patchSettings = useCallback(
     (patch: Partial<VideoSettings>) =>
@@ -76,6 +81,22 @@ export const useSceneEditor = (initial: DynamicVideoProps) => {
       }
     },
     [scenes, selectedSceneId],
+  );
+
+  /**
+   * The transition into `sceneId` — the one that joins it to the scene before
+   * it. Unlike the other scene edits this one takes an id, because it is driven
+   * from the gaps in the scene list rather than from the current selection.
+   * `undefined` falls back to the video's default transition; a transition of
+   * type "none" pins the cut.
+   */
+  const setSceneTransition = useCallback(
+    (sceneId: string, transition: SceneTransition | undefined) => {
+      setScenes((prev) =>
+        prev.map((s) => (s.id === sceneId ? { ...s, transition } : s)),
+      );
+    },
+    [],
   );
 
   const patchScene = useCallback(
@@ -181,6 +202,7 @@ export const useSceneEditor = (initial: DynamicVideoProps) => {
     deleteScene,
     changeScene,
     changeLayout,
+    setSceneTransition,
     selectLayer: setSelectedLayerId,
     addLayer,
     updateLayer,

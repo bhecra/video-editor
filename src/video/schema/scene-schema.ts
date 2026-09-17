@@ -1,6 +1,41 @@
 import { z } from "zod";
 import { zColor } from "@remotion/zod-types";
 
+export const transitionTypes = [
+  "none",
+  "zoom",
+  "fade",
+  "slide",
+  "wipe",
+  "flip",
+  "clock-wipe",
+  "iris",
+] as const;
+
+export const transitionDirections = [
+  "from-left",
+  "from-right",
+  "from-top",
+  "from-bottom",
+] as const;
+
+/**
+ * How a scene enters from the one before it. The transition overlaps both
+ * scenes, so it shortens the video by its own duration — every duration
+ * calculation has to go through `src/video/transitions.ts`.
+ */
+export const SceneTransitionSchema = z.object({
+  type: z.enum(transitionTypes),
+  durationInSeconds: z.number().min(0.1).max(3),
+  // Only "slide", "wipe" and "flip" read the direction.
+  direction: z.enum(transitionDirections).optional(),
+});
+
+export const defaultTransition: SceneTransition = {
+  type: "zoom",
+  durationInSeconds: 0.5,
+};
+
 const baseSceneFields = {
   id: z.string(),
   name: z.string(),
@@ -9,6 +44,10 @@ const baseSceneFields = {
   audioVolume: z.number().min(0).max(1).optional(),
   // Narration text. Shown as a subtitle when the setting is on.
   script: z.string().optional(),
+  // Transition in from the previous scene. The first scene has nothing to come
+  // from, so it ignores this. Left unset, the video's default transition
+  // applies instead.
+  transition: SceneTransitionSchema.optional(),
 };
 
 export const canvasLayouts = [
@@ -168,6 +207,8 @@ export const VideoSettingsSchema = z.object({
   subtitles: z.boolean(),
   subtitleStyle: SubtitleStyleSchema.optional(),
   logo: LogoSettingsSchema.optional(),
+  // Used between every pair of scenes that does not carry its own transition.
+  defaultTransition: SceneTransitionSchema.optional(),
 });
 
 export const defaultSubtitleStyle: SubtitleStyle = {
@@ -178,13 +219,19 @@ export const defaultSubtitleStyle: SubtitleStyle = {
   backgroundOpacity: 0.85,
 };
 
-export const defaultVideoSettings: VideoSettings = { subtitles: false };
+export const defaultVideoSettings: VideoSettings = {
+  subtitles: false,
+  defaultTransition,
+};
 
 export const DynamicVideoSchema = z.object({
   scenes: z.array(SceneSchema),
   settings: VideoSettingsSchema.optional(),
 });
 
+export type TransitionType = (typeof transitionTypes)[number];
+export type TransitionDirection = (typeof transitionDirections)[number];
+export type SceneTransition = z.infer<typeof SceneTransitionSchema>;
 export type LogoSettings = z.infer<typeof LogoSettingsSchema>;
 export type VideoSettings = z.infer<typeof VideoSettingsSchema>;
 export type SubtitleStyle = z.infer<typeof SubtitleStyleSchema>;

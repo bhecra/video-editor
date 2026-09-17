@@ -88,6 +88,9 @@ src/
 └── video/
     ├── DynamicVideo.tsx            composición raíz: escenas + subtítulos + logo
     ├── video-config.ts             fps y tamaño — fuente única para todo
+    ├── transitions/                transiciones entre escenas
+    │   ├── index.ts                efectos disponibles y duración real del video
+    │   └── zoom.tsx               el zoom propio, en CSS
     ├── calculate-metadata.ts       duración derivada de las escenas
     ├── renderers/                  cómo se pinta cada tipo de escena
     │   ├── SceneRenderer.tsx       despacha por scene.type
@@ -105,6 +108,34 @@ src/
 Hay una sola composición registrada, `SceneEditor`. El editor y el servidor le
 pasan las escenas como `inputProps`, así que lo que se ve en la vista previa es
 exactamente lo que sale renderizado.
+
+#### Transiciones
+
+Cada escena puede declarar cómo entra desde la anterior:
+
+```ts
+{ type: "fade", durationInSeconds: 0.5, direction: "from-right" }
+```
+
+Los efectos disponibles son `none`, `zoom`, `fade`, `slide`, `wipe`, `flip`,
+`clock-wipe` e `iris`; `direction` solo la leen `slide`, `wipe` y `flip`. La
+primera escena ignora el campo, y una escena sin transición propia usa la de
+`settings.defaultTransition` — que en los ejemplos y en los videos nuevos es un
+`zoom` de 0.5 s.
+
+El `zoom` es propio (`transitions/zoom.tsx`): dos transforms CSS, la escena que
+sale creciendo mientras se desvanece y la que entra subiendo hasta su tamaño.
+`@remotion/transitions` trae zooms propios, pero son shaders WebGL dibujados
+por la API HTML-in-Canvas: el render necesitaría `--gl=swangle` y el navegador,
+Chrome 148+ con `chrome://flags/#canvas-draw-element` activado, así que la
+vista previa se rompería para casi todos.
+
+Una transición **solapa** las dos escenas que une, así que el video dura menos
+que la suma de sus escenas. Ese cálculo vive entero en `transitions.ts`, y lo
+usan la metadata de la composición, el Player del editor y la duración total de
+la lista de escenas, para que los tres coincidan. Remotion no admite una
+transición más larga que las escenas que une: la duración se recorta a la mitad
+de la escena más corta de las dos, lo que solo se nota en escenas muy breves.
 
 ### `editor/` — el editor
 
@@ -137,7 +168,9 @@ editor/src/
 │   │   └── scene-factory.ts        crear/duplicar escenas y capas
 │   ├── scenes-panel/               SECCIÓN: escenas (columna izquierda)
 │   │   ├── ScenesPanel.tsx         lista, duración total, añadir escena
-│   │   └── SceneCard.tsx           una escena de la lista
+│   │   ├── SceneCard.tsx           una escena de la lista
+│   │   ├── TransitionRow.tsx       la transición en el hueco entre dos escenas
+│   │   └── SceneThumbnail.tsx      miniatura de una escena
 │   ├── preview-panel/              SECCIÓN: vista previa (columna central)
 │   │   ├── PreviewPanel.tsx        pestañas editar / preview / generado
 │   │   ├── SceneCanvas.tsx         frame editable con overlays encima
@@ -151,7 +184,8 @@ editor/src/
 │   │   ├── PropertiesPanel.tsx     propiedades de la escena o de la capa
 │   │   ├── LayoutPicker.tsx        elegir layout de una escena canvas
 │   │   ├── LayersList.tsx          orden y gestión de capas
-│   │   └── VideoSettingsDialog.tsx ajustes globales: logo y subtítulos
+│   │   └── VideoSettingsDialog.tsx ajustes globales: logo, subtítulos y
+│   │                               transición por defecto
 │   └── api/                        SECCIÓN: API para generar el video
 │       ├── config.ts               URL del servidor de render
 │       ├── render-api.ts           POST /api/render y polling del job
@@ -159,7 +193,8 @@ editor/src/
 │       └── upload-api.ts           POST /api/upload para la media local
 ├── components/
 │   ├── ui/                         primitivas shadcn reutilizables
-│   └── fields/                     campos reutilizables (color, media)
+│   └── fields/                     campos reutilizables (color, media,
+│                                   transición)
 └── lib/                            utilidades (cn, etiquetas y formatos)
 ```
 
