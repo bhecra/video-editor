@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type {
   CanvasLayer,
   CanvasLayout,
@@ -24,11 +24,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -107,7 +102,7 @@ const layoutGroups: { label: string; layouts: CanvasLayout[] }[] = [
 ];
 
 type Box = { x: number; y: number; w: number; h: number };
-type Mark = Box & { className: string; rx: number };
+type Mark = Box & { className: string; rx: number; kind?: "image" };
 
 // Evenly stacked bars, used wherever a layer holds running text.
 const stack = (
@@ -156,7 +151,7 @@ const layerMarks = (layer: CanvasLayer, box: Box): Mark[] => {
           return stack(box, 2, "fill-foreground/25", [1, 0.8]);
       }
     case "image":
-      return [{ ...box, rx: 3, className: "fill-foreground/20" }];
+      return [{ ...box, rx: 3, className: "fill-foreground/20", kind: "image" }];
     case "shape":
       return [{ ...box, rx: 3, className: "fill-primary/15" }];
     case "badge":
@@ -175,44 +170,104 @@ const layerMarks = (layer: CanvasLayer, box: Box): Mark[] => {
   }
 };
 
-// The wireframe is derived from the real template, so it can never drift
-// from what picking the layout actually produces.
-const LayoutThumb: React.FC<{ layout: CanvasLayout; className?: string }> = ({
-  layout,
-  className,
-}) => (
-  <svg
-    viewBox="0 0 160 90"
-    className={cn("h-full w-full", className)}
-    aria-hidden
-  >
-    <rect width="160" height="90" rx="5" className="fill-muted" />
-    {canvasTemplates[layout].layers.flatMap((layer) => {
-      const box = {
-        x: (layer.x / 100) * 160,
-        y: (layer.y / 100) * 90,
-        w: Math.max((layer.w / 100) * 160, 3),
-        h: Math.max((layer.h / 100) * 90, 3),
-      };
-      const rotation = layer.rotation
-        ? `rotate(${layer.rotation} ${box.x + box.w / 2} ${box.y + box.h / 2})`
-        : undefined;
+const ImageMark: React.FC<{ mark: Mark; clipId: string; transform?: string }> = ({
+  mark,
+  clipId,
+  transform,
+}) => {
+  const s = Math.min(mark.w, mark.h);
+  const sunR = Math.max(3, s * 0.12);
+  const base = mark.y + mark.h * 0.86;
+  const left = mark.x + mark.w * 0.06;
+  const right = mark.x + mark.w * 0.94;
 
-      return layerMarks(layer, box).map((mark, i) => (
+  return (
+    <g transform={transform}>
+      <clipPath id={clipId}>
         <rect
-          key={`${layer.id}-${i}`}
+          x={mark.x}
+          y={mark.y}
+          width={mark.w}
+          height={mark.h}
+          rx={mark.rx}
+        />
+      </clipPath>
+      <g clipPath={`url(#${clipId})`}>
+        <rect
           x={mark.x}
           y={mark.y}
           width={mark.w}
           height={mark.h}
           rx={mark.rx}
           className={mark.className}
-          transform={rotation}
         />
-      ));
-    })}
-  </svg>
-);
+        <circle
+          cx={mark.x + mark.w * 0.7}
+          cy={mark.y + mark.h * 0.3}
+          r={sunR}
+          className="fill-foreground/55"
+        />
+        <path
+          d={`M${left} ${base} L${mark.x + mark.w * 0.36} ${mark.y + mark.h * 0.38} L${mark.x + mark.w * 0.55} ${mark.y + mark.h * 0.56} L${mark.x + mark.w * 0.7} ${mark.y + mark.h * 0.44} L${right} ${base} Z`}
+          className="fill-foreground/45"
+        />
+      </g>
+    </g>
+  );
+};
+
+// The wireframe is derived from the real template, so it can never drift
+// from what picking the layout actually produces.
+const LayoutThumb: React.FC<{ layout: CanvasLayout; className?: string }> = ({
+  layout,
+  className,
+}) => {
+  const uid = useId().replace(/:/g, "");
+
+  return (
+    <svg
+      viewBox="0 0 160 90"
+      // size-full so Button's default [&_svg]:size-4 rule does not shrink the wireframe.
+      className={cn("size-full", className)}
+      aria-hidden
+    >
+      <rect width="160" height="90" rx="5" className="fill-muted" />
+      {canvasTemplates[layout].layers.flatMap((layer) => {
+        const box = {
+          x: (layer.x / 100) * 160,
+          y: (layer.y / 100) * 90,
+          w: Math.max((layer.w / 100) * 160, 3),
+          h: Math.max((layer.h / 100) * 90, 3),
+        };
+        const rotation = layer.rotation
+          ? `rotate(${layer.rotation} ${box.x + box.w / 2} ${box.y + box.h / 2})`
+          : undefined;
+
+        return layerMarks(layer, box).map((mark, i) =>
+          mark.kind === "image" ? (
+            <ImageMark
+              key={`${layer.id}-${i}`}
+              mark={mark}
+              clipId={`${uid}-${layer.id}-${i}`}
+              transform={rotation}
+            />
+          ) : (
+            <rect
+              key={`${layer.id}-${i}`}
+              x={mark.x}
+              y={mark.y}
+              width={mark.w}
+              height={mark.h}
+              rx={mark.rx}
+              className={mark.className}
+              transform={rotation}
+            />
+          ),
+        );
+      })}
+    </svg>
+  );
+};
 
 const matches = (layout: CanvasLayout, query: string) => {
   const q = query.trim().toLowerCase();
@@ -308,20 +363,19 @@ export const LayoutPicker: React.FC<Props> = ({ value, onChange }) => {
         <PopoverContent
           align="end"
           collisionPadding={12}
-          className="w-(--radix-popover-trigger-width) min-w-80 p-0"
+          className="w-(--radix-popover-trigger-width) min-w-80 overflow-hidden p-0"
           onKeyDown={onKeyDown}
         >
-          <InputGroup className="h-auto rounded-none border-0 border-b">
-            <InputGroupAddon>
-              <Search />
-            </InputGroupAddon>
-            <InputGroupInput
+          <div className="flex items-center gap-2 border-b px-2.5">
+            <Search className="size-4 shrink-0 text-muted-foreground" />
+            <input
               autoFocus
               value={query}
               placeholder="Buscar plantilla…"
               onChange={(e) => setQuery(e.target.value)}
+              className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
-          </InputGroup>
+          </div>
 
           <div
             ref={gridRef}
