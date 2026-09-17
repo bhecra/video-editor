@@ -11,6 +11,8 @@ import { SceneRenderer } from "./renderers/SceneRenderer";
 import {
   logoBackdropStyle,
   logoBoxStyle,
+  logoMarkStyle,
+  logoPlacementStyle,
   subtitleScrimStyle,
   subtitleTextStyle,
 } from "./theme/canvas-styles";
@@ -91,26 +93,12 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({
       {/* Sits outside the series so it stays on screen for every scene, and so
           transitions move the scenes underneath it rather than the logo. */}
       {logo && (
-        <div
-          style={{
-            position: "absolute",
-            left: `${logo.x}%`,
-            top: `${logo.y}%`,
-            width: `${logo.w}%`,
-          }}
-        >
+        <div style={logoPlacementStyle(logo)}>
           <div style={logoBoxStyle(logo, logoWidthPx)}>
             {logo.background && (
               <div style={logoBackdropStyle(logo, logoWidthPx)} />
             )}
-            <Img
-              src={logo.src}
-              style={{
-                position: "relative",
-                width: "100%",
-                objectFit: "contain",
-              }}
-            />
+            <Img src={logo.src} style={logoMarkStyle(logo)} />
           </div>
         </div>
       )}

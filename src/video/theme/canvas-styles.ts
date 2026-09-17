@@ -173,6 +173,16 @@ export const subtitleScrimStyle = (
   padding: `${fontSize * 2.4}px 8% ${fontSize * 1.65}px`,
 });
 
+// Outer placement of the logo on the canvas. Shared by the burned-in logo
+// and the editor overlay, so the drag target and the render stay aligned.
+export const logoPlacementStyle = (logo: LogoSettings): CSSProperties => ({
+  position: "absolute",
+  left: `${logo.x}%`,
+  top: `${logo.y}%`,
+  width: `${logo.w}%`,
+  height: logo.h != null ? `${logo.h}%` : undefined,
+});
+
 // The logo's plate. Padding and corner radius are stored as a % of the logo's
 // own width, so they are resolved against the width the logo is drawn at:
 // `widthPx` is the footprint in the pixels of whatever surface is painting it
@@ -184,10 +194,22 @@ export const logoBoxStyle = (
 ): CSSProperties => ({
   position: "relative",
   display: "flex",
+  flexDirection: "column",
   boxSizing: "border-box",
   width: "100%",
+  height: logo.h != null ? "100%" : undefined,
   // Turning the plate off keeps the padding, so the mark does not jump size.
   padding: (logo.backgroundPadding / 100) * widthPx,
+});
+
+// Fills the footprint when both axes are set, so a wide or tall box actually
+// changes the mark. Without `h` the image keeps its own aspect, as before.
+export const logoMarkStyle = (logo: LogoSettings): CSSProperties => ({
+  position: "relative",
+  display: "block",
+  width: "100%",
+  height: logo.h != null ? "100%" : undefined,
+  objectFit: logo.h != null ? "fill" : "contain",
 });
 
 // Sits behind the mark rather than around it, so the opacity applies to the

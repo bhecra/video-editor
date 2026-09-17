@@ -183,13 +183,22 @@ export const SceneSchema = z.discriminatedUnion("type", [
   ImageSceneSchema,
 ]);
 
+// Footprint size, as % of the canvas. Logos are often wordmarks or columns,
+// not squares, so width and height are independent.
+export const LOGO_SIZE_MIN = 4;
+export const LOGO_SIZE_MAX = 40;
+
 // Placed in % of the canvas, so it survives any output resolution.
 export const LogoSettingsSchema = z.object({
   src: z.string(),
   x: z.number(),
   y: z.number(),
-  // Width of the whole logo footprint, plate included.
+  // Width and height of the whole logo footprint, plate included.
   w: z.number(),
+  // Optional so payloads from before independent height still parse; the
+  // editor writes it on upload and the render falls back to the image's own
+  // aspect when it is missing.
+  h: z.number().optional(),
   // A plate behind the mark, so a dark logo stays visible over a dark scene.
   // Off by default: a logo made for video usually needs no help.
   background: z.boolean().default(false),
@@ -229,7 +238,7 @@ export const defaultLogoBackground = {
   backgroundOpacity: 0.9,
   backgroundPadding: 8,
   backgroundRadius: 12,
-} satisfies Omit<LogoSettings, "src" | "x" | "y" | "w">;
+} satisfies Omit<LogoSettings, "src" | "x" | "y" | "w" | "h">;
 
 export const defaultSubtitleStyle: SubtitleStyle = {
   color: "#ffffff",

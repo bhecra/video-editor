@@ -1,18 +1,22 @@
-import { useRef } from "react";
-import { ImageIcon, Settings2, Trash2, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ImageIcon, RotateCcw, Settings2, Trash2, Upload } from "lucide-react";
 import {
   defaultLogoBackground,
   defaultSubtitleStyle,
   defaultTransition,
+  LOGO_SIZE_MAX,
+  LOGO_SIZE_MIN,
   type LogoSettings,
   type VideoSettings,
 } from "@video/schema/scene-schema";
 import {
   logoBackdropStyle,
   logoBoxStyle,
+  logoMarkStyle,
   subtitleScrimStyle,
   subtitleTextStyle,
 } from "@video/theme/canvas-styles";
+import { COMPOSITION_HEIGHT, COMPOSITION_WIDTH } from "@video/video-config";
 import { ColorField } from "@/components/fields/ColorField";
 import { TransitionFields } from "@/components/fields/TransitionFields";
 import { Button } from "@/components/ui/button";
@@ -20,6 +24,12 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  footprintFromImage,
+  readLogoFootprint,
+  sameLogoSize,
+} from "@/lib/logo-size";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +57,10 @@ export const VideoSettingsDialog: React.FC<Props> = ({
 }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const logo = settings.logo;
+  const [originalSize, setOriginalSize] = useState<{
+    w: number;
+    h: number;
+  } | null>(null);
   const subtitleStyle = settings.subtitleStyle ?? defaultSubtitleStyle;
   const patchSubtitleStyle = (patch: Partial<typeof subtitleStyle>) =>
     onChange({ subtitleStyle: { ...subtitleStyle, ...patch } });
@@ -54,22 +68,58 @@ export const VideoSettingsDialog: React.FC<Props> = ({
   const patchLogo = (patch: Partial<LogoSettings>) =>
     logo && onChange({ logo: { ...logo, ...patch } });
 
+  useEffect(() => {
+    if (!logo?.src) {
+      setOriginalSize(null);
+      return;
+    }
+    let cancelled = false;
+    readLogoFootprint(logo.src, (size) => {
+      if (!cancelled) setOriginalSize(size);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [logo?.src]);
+
+  const atOriginalSize =
+    logo != null && originalSize != null && sameLogoSize(logo, originalSize);
+
+  const resetLogoSize = () => {
+    if (originalSize) {
+      patchLogo(originalSize);
+      return;
+    }
+    if (logo) readLogoFootprint(logo.src, patchLogo);
+  };
+
   const onLogoPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file || !file.type.startsWith("image/")) return;
     const reader = new FileReader();
-    reader.onload = () =>
-      onChange({
-        // Dropped top-right by default; it can be dragged from there.
-        logo: {
-          ...defaultLogoBackground,
-          src: String(reader.result),
-          x: 82,
-          y: 6,
-          w: 12,
-        },
-      });
+    reader.onload = () => {
+      const src = String(reader.result);
+      const img = new Image();
+      img.onload = () => {
+        const { w, h } = footprintFromImage(
+          img.naturalWidth,
+          img.naturalHeight,
+        );
+        onChange({
+          // Dropped top-right by default; it can be dragged from there.
+          logo: {
+            ...defaultLogoBackground,
+            src,
+            x: Math.min(82, 95 - w),
+            y: 6,
+            w,
+            h,
+          },
+        });
+      };
+      img.src = src;
+    };
     reader.readAsDataURL(file);
   };
 
@@ -251,7 +301,8 @@ export const VideoSettingsDialog: React.FC<Props> = ({
             </Label>
             <p className="text-xs text-muted-foreground">
               Aparece en todas las escenas. Arrástralo sobre el lienzo para
-              ubicarlo, y tira de una esquina para escalarlo.
+              ubicarlo. Tira de una esquina para escalar en proporción, o de un
+              lado para cambiar solo el ancho o el alto.
             </p>
 
             <input
@@ -296,16 +347,55 @@ export const VideoSettingsDialog: React.FC<Props> = ({
             {logo && (
               <>
                 <div className="space-y-1.5 pt-1">
-                  <Label className="text-xs text-muted-foreground">
-                    Tamaño — {Math.round(logo.w)}% del ancho
-                  </Label>
-                  <Slider
-                    value={[logo.w]}
-                    min={4}
-                    max={40}
-                    step={1}
-                    onValueChange={([w]) => patchLogo({ w })}
-                  />
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs text-muted-foreground">
+                      Tamaño
+                    </Label>
+                    {!atOriginalSize && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            onClick={resetLogoSize}
+                            aria-label="Restablecer tamaño original"
+                          >
+                            <RotateCcw />
+                            Tamaño original
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Volver a la proporción de la imagen
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">
+                        Ancho — {Math.round(logo.w)}% del video
+                      </Label>
+                      <Slider
+                        value={[logo.w]}
+                        min={LOGO_SIZE_MIN}
+                        max={LOGO_SIZE_MAX}
+                        step={1}
+                        onValueChange={([w]) => patchLogo({ w })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">
+                        Alto — {Math.round(logo.h ?? logo.w)}% del video
+                      </Label>
+                      <Slider
+                        value={[logo.h ?? logo.w]}
+                        min={LOGO_SIZE_MIN}
+                        max={LOGO_SIZE_MAX}
+                        step={1}
+                        onValueChange={([h]) => patchLogo({ h })}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-3 rounded-lg border p-3">
@@ -407,7 +497,16 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                     className="flex justify-center overflow-hidden rounded-md bg-[linear-gradient(110deg,#04101f_0%,#3b4a63_55%,#c9d3e4_100%)] p-4"
                     aria-hidden
                   >
-                    <div style={{ width: LOGO_PREVIEW_WIDTH }}>
+                    <div
+                      style={{
+                        width: LOGO_PREVIEW_WIDTH,
+                        height:
+                          logo.h != null && logo.w > 0
+                            ? (LOGO_PREVIEW_WIDTH * logo.h * COMPOSITION_HEIGHT) /
+                              (logo.w * COMPOSITION_WIDTH)
+                            : undefined,
+                      }}
+                    >
                       <div style={logoBoxStyle(logo, LOGO_PREVIEW_WIDTH)}>
                         {logo.background && (
                           <div
@@ -417,11 +516,7 @@ export const VideoSettingsDialog: React.FC<Props> = ({
                         <img
                           src={logo.src}
                           alt=""
-                          style={{
-                            position: "relative",
-                            width: "100%",
-                            objectFit: "contain",
-                          }}
+                          style={logoMarkStyle(logo)}
                         />
                       </div>
                     </div>
